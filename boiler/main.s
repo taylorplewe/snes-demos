@@ -1,4 +1,4 @@
-	.include "boiler.s"
+	.include "src/boiler.s"
 
 OAM_DMA_ADDR_LO	= $1d00 ; 2 whole pages of low table OAM, 32 bytes of high table shared with stack page ($1f--)
 OAM_DMA_ADDR_HI	= OAM_DMA_ADDR_LO + 512
@@ -75,8 +75,8 @@ nmi:
 	rti
 
 
-	.include "common.s"
-	.include "init.s"
+	.include "src/common.s"
+	.include "src/init.s"
 
 chr:
 	.incbin "bin/chr.bin"
