@@ -6,6 +6,8 @@ oam_lo_ind:		.res 1
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
 
+m7_inc:			.res 2
+
 	.code
 reset:
 	; put in 65816 mode
@@ -38,6 +40,9 @@ reset:
 	sta INIDISP
 
 forever:
+	a16
+	inc m7_inc
+	a8
 	jsr wait_for_input
 
 	; end of frame
@@ -53,7 +58,9 @@ nmi:
 	phx
 	phy
 
+	sta BG1HOFS
 	stz BG1HOFS
+	stz BG1VOFS
 	stz BG1VOFS
 
 	a16
@@ -67,8 +74,22 @@ nmi:
 		sty M7A
 		bra :++
 	:
+		; uniform
+		; sty M7A
+		; stx M7A
+
+		; increasing
+		ldy m7_inc
 		sty M7A
-		stx M7A
+		ldy m7_inc+1
+		sty M7A
+		ldy #0
+
+		; 2.0
+		; sty M7A
+		; ldy #2
+		; sty M7A
+		; ldy #0
 	:
 	bit #JOY_B
 	beq :+
@@ -78,6 +99,11 @@ nmi:
 	:
 		sty M7B
 		sty M7B
+		; ldy m7_inc
+		; sty M7B
+		; ldy m7_inc+1
+		; sty M7B
+		; ldy #0
 	:
 	bit #JOY_X
 	beq :+
@@ -85,6 +111,11 @@ nmi:
 		sty M7C
 		bra :++
 	:
+		; ldy m7_inc
+		; sty M7C
+		; ldy m7_inc+1
+		; sty M7C
+		; ldy #0
 		sty M7C
 		sty M7C
 	:
@@ -94,15 +125,30 @@ nmi:
 		sty M7D
 		bra :++
 	:
+		; uniform
+		; sty M7D
+		; stx M7D
+
+		; increasing
+		ldy m7_inc
 		sty M7D
-		stx M7D
+		ldy m7_inc+1
+		sty M7D
+		ldy #0
+
+		; 2.0
+		; sty M7D
+		; ldy #2
+		; sty M7D
 	:
 	a8
 	i16
 
+	; lda m7_inc
+	lda #$80
+	sta M7X
 	stz M7X
-	stz M7X
-	stz M7Y
+	sta M7Y
 	stz M7Y
 
 	ply
