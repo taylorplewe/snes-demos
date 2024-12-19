@@ -79,6 +79,48 @@ asr8:
 		rts
 .a8
 
+.a16
+; M7A.16 = sp + 8
+; M7B.16 = sp + 6
+; M7C.16 = sp + 4
+; M7D.16 = sp + 2
+_m7:
+	pla ; return addr
+	pla ; M7D
+	a8
+	sta M7D
+	xba
+	sta M7D
+	a16
+	pla ; M7C
+	a8
+	sta M7C
+	xba
+	sta M7C
+	a16
+	pla ; M7B
+	a8
+	sta M7B
+	xba
+	sta M7B
+	a16
+	pla ; M7A
+	a8
+	sta M7A
+	xba
+	sta M7A
+	a16
+
+	; get back to return addr
+	tsx
+	txa
+	sec
+	sbc #10
+	tax
+	txs
+	rts
+.a8
+
 ; get COS(A.8) in A.16
 cos:
 	clc                    ; clear carry for add
