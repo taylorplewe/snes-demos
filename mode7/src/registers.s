@@ -241,6 +241,11 @@ M7Y				= $2120 ; Mode 7 Matrix Registers
 ; $211F  ww+++-
 ; $2120  ww+++-
 ;         ---xxxxx xxxxxxxx
+; The matrix transformation formula is:
+; [ X ]   [ A B ]   [ SX + M7HOFS - CX ]   [ CX ]
+; [   ] = [     ] * [                  ] + [    ]
+; [ Y ]   [ C D ]   [ SY + M7VOFS - CY ]   [ CY ]
+; Note: SX/SY are screen coordinates. X/Y are coordinates in the playing field from which the pixel is taken. If $211A bit 7 is clear, the result is then restricted to 0<=X<=1023 and 0<=Y<=1023. If $211A bits 6 and 7 are both set and X or Y is less than 0 or greater than 1023, use the low 3 bits of each to choose the pixel from character 0.
 CGADD			= $2121 ; CGRAM Address Register
 ; $2121  wb+++-
 ;         cccccccc

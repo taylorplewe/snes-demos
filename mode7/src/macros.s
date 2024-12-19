@@ -23,7 +23,7 @@
 	.macro m_dma_ch0 dmap, src, ppureg, count
 		lda #dmap
 		sta DMAP0
-		ldx #src
+		ldx #src & $ffff
 		lda #^src
 		xba
 		lda #<ppureg

@@ -1,5 +1,5 @@
 pals:
-	.word $0000, $0463, $14a4, $14c6, $14e6, $1907, $1948, $1d8b, $210a, $254b, $21ed, $2650, $0000, $0000, $0000, $0000
+	.incbin "../bin/pillars_pal.bin"
 TOTAL_NUM_PAL_BYTES = *-pals
 
 init_ppu:
@@ -17,6 +17,16 @@ init_ppu:
 	stz VMADDH
 	lda #VMAIN_WORDINC
 	sta VMAIN
+
+	; lda #DMAP_2REG_1WR
+	; sta DMAP0
+	; ldx #chr
+	; lda #^chr
+	; xba
+	; lda #<VMDATAL
+	; ldy #CHR_LEN
+	; jsr dma_ch0
+
 	m_dma_ch0 DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
 
 	; bg
@@ -49,11 +59,11 @@ init_ppu:
 		sta OBSEL
 
 	; enable bg1 & objs
-	lda #TMSW_OBJ
+	lda #TMSW_BG1
 	sta TM
 	
 	; mode 1
-	lda #BGMODE_MODE1 | BGMODE_BG3PRIOR
+	lda #BGMODE_MODE7
 	sta BGMODE
 
 	; bg1 scroll
