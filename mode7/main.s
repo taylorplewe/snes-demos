@@ -100,18 +100,38 @@ nmi:
 	a16
 	jsr asr8
 	sta inc_sin
-	
+
 	eor #$ffff
 	inc a
 	sta inc_sin_neg
+
+	; uniform
+	; m7 #$0100, #0, #0, #$0100
+
+	m7 #$ff00, #0, #0, #$0100
 
 	; growing
 	; m7 m7_inc, #0, #0, m7_inc
 
 	; rotating CCW
-	m7 inc_cos, inc_sin, inc_sin_neg, inc_cos
+	; m7 inc_cos, inc_sin, inc_sin_neg, inc_cos
+
+	; showcase C
+	; m7 #$0100, #0, #$0100, #$0100
 
 	a8
+
+	; var lerp = function(v0, v1, t) {
+  	; 	return v0 + t * (v1 - v0);
+	; };
+
+	; var sl = lerp(1/farDist, 1/nearDist, scanline / 223);
+	; var scale = 1/sl;
+
+	; m7a = scale * (8/7);
+	; m7b = 0x0000;
+	; m7c = 0x0000;
+	; m7d = scale * (8/7);
 
 	; lda m7_inc
 	lda #$80
