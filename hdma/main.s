@@ -18,6 +18,12 @@ joy1_pressed:	.res 2
 	.include "src/common.s"
 	.include "src/init.s"
 	.include "src/hdma.s"
+
+	.macro _INIDISP
+	lda /1
+	sta INIDISP
+	.endmacro
+
 	
 reset:
 	clc
