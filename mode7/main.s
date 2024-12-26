@@ -108,13 +108,11 @@ nmi:
 	; uniform
 	; m7 #$0100, #0, #0, #$0100
 
-	m7 #$ff00, #0, #0, #$0100
-
 	; growing
 	; m7 m7_inc, #0, #0, m7_inc
 
 	; rotating CCW
-	; m7 inc_cos, inc_sin, inc_sin_neg, inc_cos
+	m7 inc_cos, inc_sin, inc_sin_neg, inc_cos
 
 	; showcase C
 	; m7 #$0100, #0, #$0100, #$0100

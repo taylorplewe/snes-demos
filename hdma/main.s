@@ -93,20 +93,49 @@ nmi:
 	a16
 	lda counter
 	lsr a
-	lsr a
-	pha
 	a8
 	sta BG1HOFS
 	xba
 	sta BG1HOFS
+	xba
+	sta BG1VOFS
+	xba
+	sta BG1VOFS
+	xba
+	sta M7Y
+	xba
+	sta M7Y
+	xba
 	a16
-	pla
 	clc
 	adc #$80
 	a8
 	sta M7X
 	xba
 	sta M7X
+
+
+
+
+	; pha
+	; a8
+	; sta BG1HOFS
+	; sta BG1VOFS
+	; xba
+	; sta BG1HOFS
+	; sta BG1VOFS
+	; a16
+	; pla
+	; a8
+	; sta M7Y
+	; a16
+	; clc
+	; adc #$80
+	; a8
+	; sta M7X
+	; xba
+	; sta M7X
+	; sta M7Y
 
 	plp
 	ply
