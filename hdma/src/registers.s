@@ -157,6 +157,17 @@ BG34NBA			= $210C ; BG Character Address Registers (BG3&4)
 ; Simply spoken: Saving "$63" into $210B makes the PPU look for the Tileset for BG2 at $6000 in the VRAM and for BG1 at $3000.
 BG1HOFS			= $210D ; BG Scroll Registers (BG1)
 BG1VOFS			= $210E ; BG Scroll Registers (BG1)
+; $210D  ww+++-
+;        ww+++-
+; $210E  ww+++-
+;        ww+++-
+;         ------xx xxxxxxxx
+;         ---mmmmm mmmmmmmm
+
+;               x = The BG offset, 10 bits.
+;            m    = The Mode 7 BG offset, 13 bits two's-complement signed.
+; These are actually two registers in one (or would that be "4 registers in 2"?). Anyway, writing $210D will write both BG1HOFS which works exactly like the rest of the BGnxOFS registers below ($210F-$2114), and M7HOFS which works with the M7* registers ($211B-$2120) instead.
+; Modes 0-6 use BG1xOFS and ignore M7xOFS, while Mode 7 uses M7xOFS and ignores BG1HOFS. See the appropriate sections below for details, and note the different formulas for BG1HOFS versus M7HOFS.
 BG2HOFS			= $210F ; BG Scroll Registers (BG2)
 BG2VOFS			= $2110 ; BG Scroll Registers (BG2)
 BG3HOFS			= $2111 ; BG Scroll Registers (BG3)
@@ -550,6 +561,7 @@ DMAP0			= $4300 ; DMA Control Register
 	DMAP_4REG_1WR		= %100
 	DMAP_2REG_2WR_ALT	= %101
 	DMAP_READ_FROM_PPU	= %10000000
+	DMAP_HDMA_INDIRECT  = %01000000
 	DMAP_DECR_SOURCE	= %00010000
 	DMAP_FIXED_SOURCE	= %00001000
 BBAD0			= $4301 ; DMA Destination Register
@@ -562,8 +574,24 @@ A1B0			= $4304 ; DMA Source Address Registers
 ; $43x3 rwh++++
 ; $43x4 rwb++++
 ;         bbbbbbbb hhhhhhhh llllllll
-DAS0L			= $4305 ; DMA Size Registers (Low)
-DAS0H			= $4306 ; DMA Size Registers (High)
+DAS0L			= $4305 ; DMA Size/HDMA Indirect Address Registers (Low)
+DAS0H			= $4306 ; DMA Size/HDMA Indirect Address Registers (High)
+DASB0			= $4307 ; HDMA Indirect Address bank byte
+A2A0L			= $4308 ; HDMA Table Address (low)
+A2A0H			= $4309 ; HDMA Table Address (high)
+; $43x5 rwl++++
+; $43x6 rwh++++
+; $43x7 rwb++++
+;         bbbbbbbb hhhhhhhh llllllll
+; At the beginning of the frame $43x2/3 are copied into this register for all active HDMA channels, and then this register is updated as the table is read. Thus, if a game wishes to start HDMA mid-frame (or change tables mid-frame), this register must be written. Writing this register mid-frame changes the table address for the next scanline. This register is not used for DMA. This register is set to $FF on power on, and is unchanged on reset. See the section "DMA AND HDMA" below for more information.
+NLTR0			= $430A
+; $43xA rwb++++
+;         rccccccc
+;         r        = Repeat Select.^
+;          ccccccc = Line count.^^
+; ^When set, the HDMA transfer will be performed every line, rather than only when this register is loaded from the table. However, this byte (and the indirect HDMA address) will only be reloaded from the table when the counter reaches 0.
+; ^^This is decremented every scanline. When it reaches 0, a byte is read from the HDMA table into this register (and the indirect HDMA address is read into $43x5/6 if applicable).
+	NLTR_EVERY_SCANLINE = %10000000
 
 DMAP1			= $4310 ; DMA Control Register
 BBAD1			= $4311 ; DMA Destination Register
@@ -612,17 +640,3 @@ A1T6H			= $4363 ; DMA Source Address Registers
 A1B6			= $4364 ; DMA Source Address Registers
 DAS6L			= $4365 ; DMA Size Registers (Low)
 DAS6H			= $4366 ; DMA Size Registers (High)
-
-; HDMA (shares registers and names with DMA?)
-
-; DMAPx			= $43x0 ; HDMA Control Register
-; BBADx			= $43x1 ; HDMA Destination Register
-; A1TxL			= $43x2 ; HDMA Table Address Registers
-; A1TxH			= $43x3 ; HDMA Table Address Registers
-; A1Bx			= $43x4 ; HDMA Table Address Registers
-; DASxL			= $43x5 ; HDMA Indirect Address Registers
-; DASxH			= $43x6 ; HDMA Indirect Address Registers
-; DASBx			= $43x7 ; HDMA Indirect Address Registers
-; A2AxL			= $43x8 ; HDMA Mid Frame Table Address Registers (Low)
-; A2AxH			= $43x9 ; HDMA Mid Frame Table Address Registers (High)
-; NTLRX			= $43xA ; HDMA Line Counter Register

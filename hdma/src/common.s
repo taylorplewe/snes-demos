@@ -29,24 +29,48 @@ _mul:
 	lda RDMPYL	; +4 = 9 of 8 machine cycles
 	a8
 	rts
-
-; NOTE: set DMAP0 beforehand!!
-; Also don't forget to set the corresponding address register beforehand e.g. set CGADD before doing the DMA on CGDATA
-; params:
-;	a - destination PPU register; $21aa
-;	x - low 16 bits of source address; -------- xxxxxxxx xxxxxxxx
-;	b - high 8 bits of source address; bbbbbbbb -------- --------
-;	y - # of bytes to transfer
-dma_ch0:
-	sta BBAD0
-	stx A1T0L
+	
+.a16
+; M7A.16 = sp + 8
+; M7B.16 = sp + 6
+; M7C.16 = sp + 4
+; M7D.16 = sp + 2
+_m7:
+	pla ; return addr
+	pla ; M7D
+	a8
+	sta M7D
 	xba
-	sta A1B0
-	sty DAS0L
+	sta M7D
+	a16
+	pla ; M7C
+	a8
+	sta M7C
+	xba
+	sta M7C
+	a16
+	pla ; M7B
+	a8
+	sta M7B
+	xba
+	sta M7B
+	a16
+	pla ; M7A
+	a8
+	sta M7A
+	xba
+	sta M7A
+	a16
 
-	lda #1
-	sta MDMAEN ; run it
+	; get back to return addr
+	tsx
+	txa
+	sec
+	sbc #10
+	tax
+	txs
 	rts
+.a8
 
 ; NOTE: if you're ever desparate for frame time to do stuff (that doesn't need controller input), place it before this function, which just waits until controller input is ready, gets called
 wait_for_input:

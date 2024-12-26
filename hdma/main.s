@@ -13,17 +13,12 @@ local:			.res 16
 oam_lo_ind:		.res 1
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
+counter: .res 2
 	
 	.code
 	.include "src/common.s"
 	.include "src/init.s"
 	.include "src/hdma.s"
-
-	.macro _INIDISP
-	lda /1
-	sta INIDISP
-	.endmacro
-
 	
 reset:
 	clc
@@ -50,13 +45,19 @@ reset:
 	sta INIDISP
 
 	jsr init_ppu
-	jsr hdma::init
 
 	; turn screen back on & set brightness
 	lda #$f
 	sta INIDISP
 
 forever:
+	a16
+	lda counter
+	inc a
+	and #%0001111111111111
+	sta counter
+	a8
+	jsr hdma::setup
 	jsr wait_for_input
 
 	jsr clear_oam
@@ -73,17 +74,47 @@ nmi:
 	pha
 	phx
 	phy
+	php
+	a8
+	i16
+
+	jsr hdma::run
 
 	;oam(sprites)
 	ldx #0
 	stx OAMADDL
-	m_dma_ch0 DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
 
+	; mode 7
+	; a16
+	; m7 #$0100, #0, #0, #$0100
+	; a8
+
+	a16
+	lda counter
+	lsr a
+	lsr a
+	pha
+	a8
+	sta BG1HOFS
+	xba
+	sta BG1HOFS
+	a16
+	pla
+	clc
+	adc #$80
+	a8
+	sta M7X
+	xba
+	sta M7X
+
+	plp
 	ply
 	plx
 	pla
 	rti
 
+	.segment "BANK1"
 chr:
-	.incbin "bin/chr.bin"
+	.incbin "bin/pillars.bin"
 CHR_LEN = *-chr

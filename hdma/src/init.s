@@ -1,31 +1,31 @@
-pals: .incbin "../bin/pals.bin"
+pals: .incbin "../bin/pillars_pal.bin"
 TOTAL_NUM_PAL_BYTES = *-pals
 
 init_ppu:
 	; palettes
 	stz CGADD
-	m_dma_ch0 DMAP_1REG_2WR, pals, CGDATA, TOTAL_NUM_PAL_BYTES
+	dma 0, DMAP_1REG_2WR, pals, CGDATA, TOTAL_NUM_PAL_BYTES
 
 	; chr
 	stz VMADDL
 	stz VMADDH
 	lda #VMAIN_WORDINC
 	sta VMAIN
-	m_dma_ch0 DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
+	dma 0, DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
 
 	; bg
 		; tilemap
 		; ldx #$2000
 		; stx VMADDL
 		; already there hun
-		; m_dma_ch0 DMAP_2REG_1WR, map, VMDATAL, TOTAL_NUM_MAP_BYTES
+		; dma DMAP_2REG_1WR, map, VMDATAL, TOTAL_NUM_MAP_BYTES
 
 		; lda #$00
 		; sta VMADDL
 		; lda #$24
 		; sta VMADDH
 
-		; m_dma_ch0 DMAP_2REG_1WR, bg3, VMDATAL, TOTAL_NUM_MAP_BYTES
+		; dma DMAP_2REG_1WR, bg3, VMDATAL, TOTAL_NUM_MAP_BYTES
 
 		; where is the bg tilemap in vram?
 		; lda #$20 ; $2000
@@ -43,11 +43,11 @@ init_ppu:
 		sta OBSEL
 
 	; enable bg1 & objs
-	lda #TMSW_OBJ
+	lda #TMSW_BG1
 	sta TM
 	
 	; mode 1
-	lda #BGMODE_MODE1 | BGMODE_BG3PRIOR
+	lda #BGMODE_MODE7
 	sta BGMODE
 
 	; bg1 scroll
