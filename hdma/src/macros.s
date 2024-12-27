@@ -15,9 +15,23 @@
 		ror a
 	.endmacro
 	.macro mul num1, num2
-		lda num1
+		.if (.not .match({num1}, a))
+			.if (.match({num1}, x))
+				txa
+			.elseif (.match({num1}, y))
+				tya
+			.else
+				lda num1
+			.endif
+		.endif
 		xba
-		lda num2
+		.if (.match({num2}, x))
+			txa
+		.elseif (.match({num2}, y))
+			tya
+		.else
+			lda num2
+		.endif
 		jsr _mul
 	.endmacro
 

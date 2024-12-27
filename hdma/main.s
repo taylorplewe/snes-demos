@@ -50,7 +50,20 @@ reset:
 	lda #$f
 	sta INIDISP
 
+	lda #22
+	jsr cos
+	sta $100
+	; mul #-1&$ff, #2
+	; lda #2
+	; mul a, #3
+	ldx #$ef02
+	ldy #$ac04
+	mul x, y
+	sta $102
+
 forever:
+	jsr hdma::calc_persp_rot_m7_vals
+
 	a16
 	lda counter
 	inc a
@@ -85,27 +98,21 @@ nmi:
 	stx OAMADDL
 	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
 
-	; mode 7
-	; a16
-	; m7 #$0100, #0, #0, #$0100
-	; a8
-
 	a16
+	i8
 	lda counter
 	lsr a
+	tax
+	xba
+	tay
+	xba
 	a8
-	sta BG1HOFS
-	xba
-	sta BG1HOFS
-	xba
-	sta BG1VOFS
-	xba
-	sta BG1VOFS
-	xba
-	sta M7Y
-	xba
-	sta M7Y
-	xba
+	stx BG1HOFS
+	sty BG1HOFS
+	stx BG1VOFS
+	sty BG1VOFS
+	stx M7Y
+	sty M7Y
 	a16
 	clc
 	adc #$80
@@ -113,6 +120,7 @@ nmi:
 	sta M7X
 	xba
 	sta M7X
+	i16
 
 
 
