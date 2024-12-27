@@ -50,17 +50,6 @@ reset:
 	lda #$f
 	sta INIDISP
 
-	lda #22
-	jsr cos
-	sta $100
-	; mul #-1&$ff, #2
-	; lda #2
-	; mul a, #3
-	ldx #$ef02
-	ldy #$ac04
-	mul x, y
-	sta $102
-
 forever:
 	jsr hdma::calc_persp_rot_m7_vals
 
