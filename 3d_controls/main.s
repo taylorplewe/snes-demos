@@ -45,12 +45,15 @@ reset:
 	sta INIDISP
 
 	jsr init_ppu
+	jsr hdma::init
 
 	; turn screen back on & set brightness
 	lda #$f
 	sta INIDISP
 
 forever:
+	jsr hdma::calc_persp_rot_m7_vals
+
 	a16
 	lda counter
 	inc a
