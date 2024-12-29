@@ -52,10 +52,6 @@ persp112_8_len = *-persp112_8
 	cos8 = local+2
 	sin8 = local+3
 
-	nop
-	nop
-	nop
-
 	; calulate cos for later
 	stz is_cos_neg
 	lda counter
