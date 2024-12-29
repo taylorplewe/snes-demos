@@ -11,13 +11,16 @@ fn scale(s: f64) f64 {
 }
 
 pub fn main() !void {
-    const f = try std.fs.cwd().createFile("bin/persp112_8_zig.bin", "w");
+    const f = try std.fs.cwd().createFile("bin/persp112_8_zig.bin", .{});
     for (START_SCANLINE..224) |s| {
-        const s_stretched = (s - START_SCANLINE) * 2;
-        const s_normalized = s_stretched / 224;
-        const val = scale(@as(f64, s_normalized));
-        const val_int: u16 = @intCast(val);
-        std.debug.print("{d} {d}\n", .{val_int});
-        try f.write(val_int);
+        const s_fl: f64 = @floatFromInt(s);
+        const s_stretched: f64 = (s_fl - START_SCANLINE) * 2;
+        const s_normalized: f64 = s_stretched / 224;
+        const val = scale(s_normalized);
+        const val_int: u16 = @intFromFloat(val);
+        std.debug.print("{d} {d}\n", .{ s, val_int });
+        var buf: [1]u8 = undefined;
+        buf[0] = @intCast(val_int & 0xff);
+        _ = try f.write(&buf);
     }
 }
