@@ -17,10 +17,6 @@ persp112_8_len = *-persp112_8
 	dma_set 1, DMAP_1REG_2WR, persp128, M7A
 	dma_set 2, DMAP_1REG_2WR, persp128, M7D
 
-	lda #NLTR_EVERY_SCANLINE
-	sta NLTR0 + $10
-	sta NLTR0 + $20
-
 .endproc
 
 .proc run

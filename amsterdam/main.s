@@ -259,7 +259,7 @@ CLRRegLoop:
 ;   BNE CLRRegLoopC
   RTS
 
-	.include "registers.s"
+	.include "../registers.s"
 
 	.segment "BANK1"
 chr:

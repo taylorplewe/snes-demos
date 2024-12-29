@@ -381,7 +381,7 @@ readp1:
 	@end: rts
 ;
 
-	.include "registers.s"
+	.include "../registers.s"
 	orcachr: .incbin "bin/orca.bin"
 orcachrend:
 

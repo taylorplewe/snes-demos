@@ -68,12 +68,28 @@ OAMDATA			= $2104 ; OAM Data Write Register
 ; s         = Sprite size flag. See below for details.
 	SPRINFO_VFLIP	= %10000000
 	SPRINFO_HFLIP	= %01000000
+	SPRINFO_PRIOR0	= %00000000
+	SPRINFO_PRIOR1	= %00010000
+	SPRINFO_PRIOR2	= %00100000
+	SPRINFO_PRIOR3	= %00110000
+	SPRINFO_PAL0	= %00000000
+	SPRINFO_PAL1	= %00000010
+	SPRINFO_PAL2	= %00000100
+	SPRINFO_PAL3	= %00000110
+	SPRINFO_PAL4	= %00001000
+	SPRINFO_PAL5	= %00001010
+	SPRINFO_PAL6	= %00001100
+	SPRINFO_PAL7	= %00001110
+	SPRINFO_NT0		= %00000000
 	SPRINFO_NT1		= %00000001
+	SPR_HI_NEGX		= %01010101
+	SPR_HI_LARGE	= %10101010
 BGMODE			= $2105 ; BG Mode and Character Size Register
 ; wb+++-
 ; DCBAemmm
 
 ; A/B/C/D   = BG character size for BG1/BG2/BG3/BG4
+; (set if that bg should use 16x16 tiles not 8x8)
 ;      mmm  = BG Mode
 ;     e     = Mode 1 BG3 priority bit
 ;     Mode     BG depth  OPT  Priorities
@@ -89,6 +105,19 @@ BGMODE			= $2105 ; BG Mode and Character Size Register
 ;      6       4          y    3A 2  1a 0
 ;      7       8          n    3  2  1a 0
 ;      7+EXTBG 8 7        n    3  2B 1a 0b
+	BGMODE_16x16_BG1 = %00010000
+	BGMODE_16x16_BG2 = %00100000
+	BGMODE_16x16_BG3 = %01000000
+	BGMODE_16x16_BG4 = %10000000
+	BGMODE_MODE0 = 0
+	BGMODE_MODE1 = 1
+	BGMODE_MODE2 = 2
+	BGMODE_MODE3 = 3
+	BGMODE_MODE4 = 4
+	BGMODE_MODE5 = 5
+	BGMODE_MODE6 = 6
+	BGMODE_MODE7 = 7
+	BGMODE_BG3PRIOR = %00001000
 MOSAIC			= $2106 ; Mosaic Register
 ; wb+++-
 ; xxxxDCBA
@@ -102,10 +131,24 @@ BG4SC			= $210A ; BG Tilemap Address Registers (BG4)
 ; $2108  wb++?-
 ; $2109  wb++?-
 ; $210A  wb++?-
+
+; 00000000 00000000 00000000 00000000
 ; aaaaaayx
-; aaaaaa      = Tilemap address in VRAM (Addr>>10)
+; aaaaaa      = Tilemap address  in VRAM (Addr>>10)
 ;        x    = Tilemap horizontal mirroring
 ;       y     = Tilemap vertical mirroring
+;       00  32x32   AA
+;                   AA
+;       01  64x32   AB
+;                   AB
+;       10  32x64   AA
+;                   BB
+;       11  64x64   AB
+;                   CD
+	BGSC_32x32 = %00
+	BGSC_64x32 = %01
+	BGSC_32x64 = %10
+	BGSC_64x64 = %11
 BG12NBA			= $210B ; BG Character Address Registers (BG1&2)
 BG34NBA			= $210C ; BG Character Address Registers (BG3&4)
 ; $210B  wb++?-
@@ -116,6 +159,17 @@ BG34NBA			= $210C ; BG Character Address Registers (BG3&4)
 ; Simply spoken: Saving "$63" into $210B makes the PPU look for the Tileset for BG2 at $6000 in the VRAM and for BG1 at $3000.
 BG1HOFS			= $210D ; BG Scroll Registers (BG1)
 BG1VOFS			= $210E ; BG Scroll Registers (BG1)
+; $210D  ww+++-
+;        ww+++-
+; $210E  ww+++-
+;        ww+++-
+;         ------xx xxxxxxxx
+;         ---mmmmm mmmmmmmm
+
+;               x = The BG offset, 10 bits.
+;            m    = The Mode 7 BG offset, 13 bits two's-complement signed.
+; These are actually two registers in one (or would that be "4 registers in 2"?). Anyway, writing $210D will write both BG1HOFS which works exactly like the rest of the BGnxOFS registers below ($210F-$2114), and M7HOFS which works with the M7* registers ($211B-$2120) instead.
+; Modes 0-6 use BG1xOFS and ignore M7xOFS, while Mode 7 uses M7xOFS and ignores BG1HOFS. See the appropriate sections below for details, and note the different formulas for BG1HOFS versus M7HOFS.
 BG2HOFS			= $210F ; BG Scroll Registers (BG2)
 BG2VOFS			= $2110 ; BG Scroll Registers (BG2)
 BG3HOFS			= $2111 ; BG Scroll Registers (BG3)
@@ -153,7 +207,10 @@ VMAIN			= $2115 ; Video Port Control Register
 ;                      01 = Remap addressing aaaaaaaaBBBccccc => aaaaaaaacccccBBB
 ;                      10 = Remap addressing aaaaaaaBBBcccccc => aaaaaaaccccccBBB
 ;                      11 = Remap addressing aaaaaaBBBccccccc => aaaaaacccccccBBB
-	VMAIN_WORDINC = %10000000
+	VMAIN_WORDINC	= %10000000
+	VMAIN_INC_1		= %00
+	VMAIN_INC_32	= %01
+	VMAIN_INC_128	= %10
 VMADDL			= $2116 ; VRAM Address Registers (Low)
 VMADDH			= $2117 ; VRAM Address Registers (High)
 ; $2116  wl++?-
@@ -164,6 +221,17 @@ VMDATAH			= $2119 ; VRAM Data Write Registers (High)
 ; $2118  wl++--
 ; $2119  wh++--
 ;         xxxxxxxx xxxxxxxx
+; TILEMAPS:
+;   VMDATAH     VMDATAL
+;    $4119       $4118
+; 15  bit  8   7  bit  0
+;  ---- ----   ---- ----
+;  VHPC CCTT   TTTT TTTT
+;  |||| ||||   |||| ||||
+;  |||| ||++---++++-++++- Tile index
+;  |||+-++--------------- Palette selection
+;  ||+------------------- Priority
+;  ++-------------------- Flip vertical (V) or horizontal (H)
 M7SEL			= $211A ; Mode 7 Settings Register
 ; $211A  wb++?-
 ;         rc----yx
@@ -365,6 +433,10 @@ NMITIMEN		= $4200 ; Interrupt Enable Register
 ;                    1/0 => An IRQ will occur sometime just after the H Counter reaches the value set in $4207/8.
 ;                    1/1 => An IRQ will occur sometime just after the H Counter reaches the value set in $4207/8 when V Counter equals the value set in $4209/a.
 ;                a = Auto-Joypad Read Enable.^^
+	NMITIMEN_NMIENABLE	 = %10000000
+	NMITIMEN_AUTOJOY	 = %00000001
+	NMITIMEN_IRQENABLE_X = %00010000
+	NMITIMEN_IRQENABLE_Y = %00100000
 WRIO			= $4201 ; IO Port Write Register
 WRMPYA			= $4202 ; Multiplicand Registers
 WRMPYB			= $4203 ; Multiplicand Registers
@@ -407,8 +479,11 @@ HVBJOY			= $4212 ; PPU Status Register
 ; $4212 r b++++
 ;         vh-----a
 ;         v        = V-Blank Flag.^
-;          h       = H-Blank Flag.^^
+;          h       = H-Blank Flag.^^`
 ;                a = Auto-Joypad Status.^^^
+	HVBJOY_IN_VBLANK   = %10000000
+	HVBJOY_IN_HBLANK   = %01000000
+	HVBJOY_READING_JOY = %00000001
 RDIO			= $4213 ; IO Port Read Register
 RDDIVL			= $4214 ; Multiplication Or Divide Result Registers (Low)
 RDDIVH			= $4215 ; Multiplication Or Divide Result Registers (High)
@@ -493,6 +568,7 @@ DMAP0			= $4300 ; DMA Control Register
 	DMAP_4REG_1WR		= %100
 	DMAP_2REG_2WR_ALT	= %101
 	DMAP_READ_FROM_PPU	= %10000000
+	DMAP_HDMA_INDIRECT  = %01000000
 	DMAP_DECR_SOURCE	= %00010000
 	DMAP_FIXED_SOURCE	= %00001000
 BBAD0			= $4301 ; DMA Destination Register
@@ -505,8 +581,23 @@ A1B0			= $4304 ; DMA Source Address Registers
 ; $43x3 rwh++++
 ; $43x4 rwb++++
 ;         bbbbbbbb hhhhhhhh llllllll
-DAS0L			= $4305 ; DMA Size Registers (Low)
-DAS0H			= $4306 ; DMA Size Registers (High)
+DAS0L			= $4305 ; DMA Size/HDMA Indirect Address Registers (Low)
+DAS0H			= $4306 ; DMA Size/HDMA Indirect Address Registers (High)
+DASB0			= $4307 ; HDMA Indirect Address bank byte
+A2A0L			= $4308 ; HDMA Table Address (low)
+A2A0H			= $4309 ; HDMA Table Address (high)
+; $43x5 rwl++++
+; $43x6 rwh++++
+; $43x7 rwb++++
+;         bbbbbbbb hhhhhhhh llllllll
+; At the beginning of the frame $43x2/3 are copied into this register for all active HDMA channels, and then this register is updated as the table is read. Thus, if a game wishes to start HDMA mid-frame (or change tables mid-frame), this register must be written. Writing this register mid-frame changes the table address for the next scanline. This register is not used for DMA. This register is set to $FF on power on, and is unchanged on reset. See the section "DMA AND HDMA" below for more information.
+NLTR0			= $430A
+; $43xA rwb++++
+;         rccccccc
+;         r        = Repeat Select.^
+;          ccccccc = Line count.^^
+; ^When set, the HDMA transfer will be performed every line, rather than only when this register is loaded from the table. However, this byte (and the indirect HDMA address) will only be reloaded from the table when the counter reaches 0.
+; ^^This is decremented every scanline. When it reaches 0, a byte is read from the HDMA table into this register (and the indirect HDMA address is read into $43x5/6 if applicable).
 
 DMAP1			= $4310 ; DMA Control Register
 BBAD1			= $4311 ; DMA Destination Register
@@ -555,17 +646,3 @@ A1T6H			= $4363 ; DMA Source Address Registers
 A1B6			= $4364 ; DMA Source Address Registers
 DAS6L			= $4365 ; DMA Size Registers (Low)
 DAS6H			= $4366 ; DMA Size Registers (High)
-
-; HDMA (shares registers and names with DMA?)
-
-; DMAPx			= $43x0 ; HDMA Control Register
-; BBADx			= $43x1 ; HDMA Destination Register
-; A1TxL			= $43x2 ; HDMA Table Address Registers
-; A1TxH			= $43x3 ; HDMA Table Address Registers
-; A1Bx			= $43x4 ; HDMA Table Address Registers
-; DASxL			= $43x5 ; HDMA Indirect Address Registers
-; DASxH			= $43x6 ; HDMA Indirect Address Registers
-; DASBx			= $43x7 ; HDMA Indirect Address Registers
-; A2AxL			= $43x8 ; HDMA Mid Frame Table Address Registers (Low)
-; A2AxH			= $43x9 ; HDMA Mid Frame Table Address Registers (High)
-; NTLRX			= $43xA ; HDMA Line Counter Register

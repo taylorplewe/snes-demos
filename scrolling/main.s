@@ -1,4 +1,4 @@
-	.include "boiler.s"
+	.include "src/boiler.s"
 
 OAM_DMA_ADDR_LO	= $1d00 ; 2 whole pages of low table OAM, 32 bytes of high table shared with stack page ($1f--)
 OAM_DMA_ADDR_HI	= OAM_DMA_ADDR_LO + 512
@@ -30,11 +30,11 @@ test_bro: .res 2
 	
 	.code
 
-	.include "common.s"
-	.include "init.s"
-	.include "draw.s"
-	.include "scroll.s"
-	.include "nmi.s"
+	.include "src/common.s"
+	.include "src/init.s"
+	.include "src/draw.s"
+	.include "src/scroll.s"
+	.include "src/nmi.s"
 
 reset:
 	; go into native mode lets gooooo
@@ -124,11 +124,11 @@ nmi:
 	rti
 
 map:
-	.include "../map.s"
+	.include "map.s"
 MAP_LEN = *-map
 
 metas:
-	.include "../metas.s"
+	.include "metas.s"
 METAS_LEN = *-metas
 
 chr:
