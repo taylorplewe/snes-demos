@@ -163,6 +163,7 @@ persp112_8_len = *-persp112_8
 .endproc
 
 .proc do_m7
+	; move diagonally
 	a16
 	i8
 	lda counter
@@ -186,6 +187,46 @@ persp112_8_len = *-persp112_8
 	xba
 	sta M7X
 	i16
+
+	; still
+	; stz BG1HOFS
+	; stz BG1HOFS
+	; stz BG1VOFS
+	; lda #1
+	; sta BG1VOFS
+	; stz M7Y
+	; sta M7Y
+	; lda #128
+	; sta M7X
+	; stz M7X
+
+	; move down
+	; a16
+	; i8
+	; lda counter
+	; lsr a
+	; tax
+	; xba
+	; tay
+	; xba
+	; sec
+	; sbc #112
+	; a8
+	; ; m7y = 112
+	; 	; sta M7Y
+	; 	; xba
+	; 	; sta M7Y
+	; stz BG1HOFS
+	; stz BG1HOFS
+	; stx BG1VOFS
+	; sty BG1VOFS
+	; ; m7y = 0
+	; 	stx M7Y
+	; 	sty M7Y
+	; lda #128
+	; sta M7X
+	; stz M7X
+	; i16
 	rts
 .endproc
 
