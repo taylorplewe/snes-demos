@@ -91,7 +91,7 @@ forever:
 	i16
 	lda frames, x
 	sta OAM_TILE
-	lda #SPRINFO_PAL0 | SPRINFO_PRIOR3
+	lda #SPRINFO_PRIOR3 | SPRINFO_PAL(0)
 	ora circle_nt1
 	sta OAM_INFO
 

@@ -102,7 +102,7 @@ forever:
 	sbc #CIRCLE_SIZE/2
 	sta OAM_Y
 	stz OAM_TILE
-	lda #SPRINFO_PAL0 | SPRINFO_PRIOR3
+	lda #SPRINFO_PRIOR3 | SPRINFO_PAL(0)
 	sta OAM_INFO
 		; hi bits
 		ldx #0
@@ -119,7 +119,7 @@ forever:
 	sbc #CIRCLE_SIZE/2
 	sta OAM_Y+4
 	stz OAM_TILE+4
-	lda #SPRINFO_PAL0 | SPRINFO_PRIOR3
+	lda #SPRINFO_PAL(0) | SPRINFO_PRIOR3
 	sta OAM_INFO+4
 		; hi bits
 		ldx #4

@@ -112,7 +112,7 @@ forever:
 	sbc #CIRCLE_SIZE/2
 	sta OAM_Y
 	stz OAM_TILE
-	lda #SPRINFO_PAL0 | SPRINFO_PRIOR3
+	lda #SPRINFO_PRIOR3 | SPRINFO_PAL(0)
 	sta OAM_INFO
 
 	ldx #0

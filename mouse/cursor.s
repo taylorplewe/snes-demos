@@ -103,7 +103,7 @@ cursor_draw:
 	sta OAM_Y
 	lda @tile
 	sta OAM_TILE
-	lda #SPRINFO_PAL0 | SPRINFO_NT0 | SPRINFO_PRIOR3
+	lda #SPRINFO_NT0 | SPRINFO_PRIOR3 | SPRINFO_PAL(0)
 	sta OAM_INFO
 	; hi bits
 	lda #SPR_HI_LARGE
