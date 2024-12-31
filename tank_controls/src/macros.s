@@ -14,6 +14,12 @@
 		cmp #$80
 		ror a
 	.endmacro
+	.a16
+	.macro asr16
+		cmp #$8000
+		ror a
+	.endmacro
+	.a8
 	.macro mul num1, num2
 		lda num1
 		xba

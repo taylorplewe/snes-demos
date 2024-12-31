@@ -66,6 +66,10 @@ OAMDATA			= $2104 ; OAM Data Write Register
 ; oo        = Sprite priority. See below for details.
 ; h/v       = Horizontal/Vertical flip flags.^^^
 ; s         = Sprite size flag. See below for details.
+; ^Values 0-239 are on-screen. -63 through -1 are "off the top", so the bottom part of the sprite comes in at the top of the screen. Note that this implies a really big sprite can go off the bottom and come back in the top.
+; ^^See below for the calculation of the VRAM address. Note that this could also be considered as 'rrrrcccc' specifying the row and column of the tile in the 16x16 character table.
+; ^^^Note this flips the whole sprite, not just the individual tiles. However, the rectangular sprites are flipped vertically as if they were two square sprites (i.e. rows "01234567" flip to "32107654", not "76543210").
+; The sprite size is controlled by bits 5-7 of $2101, and the Size bit of OAM. $2101 determines the two possible sizes for all sprites. If the OAM Size flag is 0, the sprite uses the smaller size, otherwise it uses the larger size.
 	SPRINFO_VFLIP	= %10000000
 	SPRINFO_HFLIP	= %01000000
 	SPRINFO_PRIOR0	= %00000000
