@@ -53,6 +53,7 @@ persp112_8_len = *-persp112_8
 	rts
 .endproc
 
+; y = 0 -> move forward; 1 -> move backwards; 2 -> strafe right; 3 -> strafe left
 .proc move
 	php
 	; x
@@ -60,25 +61,62 @@ persp112_8_len = *-persp112_8
 		lda angle
 		jsr cos
 		a16
+		cpy #0
+		beq :+
+		cpy #2
+		beq :+
+			eor #$ffff
+			inc a
+			bra :+
+		:
 		.repeat 8
 			asr16
 		.endrepeat
-		clc
-		adc x_pos
-		sta x_pos
+		cpy #2
+		beq :+
+		cpy #3
+		beq :+
+			clc
+			adc x_pos
+			sta x_pos
+			bra :++
+		:
+			clc
+			adc y_pos
+			sta y_pos
+		:
 	; y
 		a8
 		lda angle
 		jsr sin
 		a16
+		cpy #0
+		beq :+
+		cpy #2
+		beq :+
+			eor #$ffff
+			inc a
+		:
 		eor #$ffff
 		inc a
 		.repeat 8
 			asr16
 		.endrepeat
-		clc
-		adc y_pos
-		sta y_pos
+		cpy #2
+		beq :+
+		cpy #3
+		beq :+
+			clc
+			adc y_pos
+			sta y_pos
+			bra :++
+		:
+			eor #$ffff
+			inc a
+			clc
+			adc x_pos
+			sta x_pos
+		:
 	plp
 	rts
 .endproc
@@ -107,6 +145,25 @@ persp112_8_len = *-persp112_8
 	lda JOY1L
 	bit #JOY_U
 	beq :+
+		ldy #0
+		jsr move
+		bra :++
+	:
+	bit #JOY_D
+	beq :+
+		ldy #1
+		jsr move
+	:
+	lda JOY1L
+	bit #JOY_SHOULDER_L
+	beq :+
+		ldy #2
+		jsr move
+		bra :++
+	:
+	bit #JOY_SHOULDER_R
+	beq :+
+		ldy #3
 		jsr move
 	:
 	a8
