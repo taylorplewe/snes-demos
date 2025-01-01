@@ -3,7 +3,7 @@
 WIDTH = 32
 HEIGHT = 32
 MOVE_SPEED = $0120
-TURN_SPEED = 1
+TURN_SPEED = 2
 
 .struct Tank
 	x_pos     .word
@@ -41,7 +41,7 @@ tank: .tag Tank
 			eor #$ffff
 			inc a
 		:
-		.repeat 7
+		.repeat 6
 			asr16
 		.endrepeat
 		clc
@@ -57,7 +57,7 @@ tank: .tag Tank
 			eor #$ffff
 			inc a
 		:
-		.repeat 7
+		.repeat 6
 			asr16
 		.endrepeat
 		clc
@@ -127,16 +127,6 @@ tank: .tag Tank
 		clc
 		adc tank + Tank::y_pos
 		sta tank + Tank::dot_y_pos
-
-	; 0000 0000  0000 0000
-	; 0111 1111  1111 1111
-	; 8 = 1
-	; 7 = 2
-	; 6 = 4
-	; 5 = 8
-	; 4 = 16
-	; 3 = 32
-	; 2 = 64
 	a8
 
 	rts

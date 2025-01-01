@@ -52,16 +52,14 @@ reset:
 	sta INIDISP
 
 forever:
-	jsr hdma::calc_persp_rot_m7_vals
-
 	a16
 	lda counter
 	inc a
 	and #%0001111111111111
 	sta counter
 	a8
-	jsr hdma::setup
 	jsr wait_for_input
+	jsr hdma::update
 
 	jsr clear_oam
 

@@ -1,6 +1,13 @@
 ; page 2-17-5 of the official SNES dev manuel
 .scope hdma
 
+	.zeropage
+x_pos: .res 2
+y_pos: .res 2
+angle: .res 1
+
+	.code
+
 M7AD_VALS = $200
 M7B_VALS = $300
 M7C_VALS = $400
@@ -46,6 +53,66 @@ persp112_8_len = *-persp112_8
 	rts
 .endproc
 
+.proc move
+	php
+	; x
+		a8
+		lda angle
+		jsr cos
+		a16
+		.repeat 8
+			asr16
+		.endrepeat
+		clc
+		adc x_pos
+		sta x_pos
+	; y
+		a8
+		lda angle
+		jsr sin
+		a16
+		eor #$ffff
+		inc a
+		.repeat 8
+			asr16
+		.endrepeat
+		clc
+		adc y_pos
+		sta y_pos
+	plp
+	rts
+.endproc
+
+.proc control
+	a16
+	; turn
+	lda JOY1L
+	bit #JOY_L
+	beq :+
+		a8
+		dec angle
+		dec angle
+		a16
+	:
+	lda JOY1L
+	bit #JOY_R
+	beq :+
+		a8
+		inc angle
+		inc angle
+		a16
+	:
+
+	; move
+	lda JOY1L
+	bit #JOY_U
+	beq :+
+		jsr move
+	:
+	a8
+	rts
+.endproc
+
 .proc calc_persp_rot_m7_vals
 	is_cos_neg = local
 	is_sin_neg = local+1
@@ -54,7 +121,9 @@ persp112_8_len = *-persp112_8
 
 	; calulate cos for later
 	stz is_cos_neg
-	lda counter
+	lda angle
+	clc
+	adc #64
 	pha
 	jsr cos
 	a16
@@ -158,40 +227,45 @@ persp112_8_len = *-persp112_8
 	rts
 .endproc
 
+.proc update
+	jsr setup
+	jsr control
+	jsr calc_persp_rot_m7_vals
+.endproc
+
 .proc do_m7
 	; move diagonally
-	a16
-	i8
-	lda counter
-	lsr a
-	tax
-	xba
-	tay
-	xba
-	a8
-	stx BG1HOFS
-	sty BG1HOFS
-	stx BG1VOFS
-	sty BG1VOFS
-	stx M7Y
-	sty M7Y
-	a16
-	clc
-	adc #$80
-	a8
-	sta M7X
-	xba
-	sta M7X
-	i16
+	; a16
+	; i8
+	; lda counter
+	; lsr a
+	; tax
+	; xba
+	; tay
+	; xba
+	; a8
+	; stx BG1HOFS
+	; sty BG1HOFS
+	; stx BG1VOFS
+	; sty BG1VOFS
+	; stx M7Y
+	; sty M7Y
+	; a16
+	; clc
+	; adc #$80
+	; a8
+	; sta M7X
+	; xba
+	; sta M7X
+	; i16
 
 	; still
 	; stz BG1HOFS
 	; stz BG1HOFS
 	; stz BG1VOFS
-	; lda #1
-	; sta BG1VOFS
+	; stz BG1VOFS
 	; stz M7Y
-	; sta M7Y
+	; stz M7Y
 	; lda #128
 	; sta M7X
 	; stz M7X
@@ -223,6 +297,38 @@ persp112_8_len = *-persp112_8
 	; sta M7X
 	; stz M7X
 	; i16
+	
+	; controls
+	.a8
+	lda x_pos+1
+	sta BG1HOFS
+	stz BG1HOFS
+	lda y_pos+1
+	sta BG1VOFS
+	stz BG1VOFS
+	lda #0
+	xba
+	lda x_pos+1
+	a16
+	clc
+	adc #128
+	a8
+	sta M7X
+	xba
+	sta M7X
+	lda y_pos+1
+	sta M7Y
+	stz M7Y
+	; stz BG1HOFS
+	; stz BG1HOFS
+	; stz BG1VOFS
+	; stz BG1VOFS
+	; stz M7Y
+	; stz M7Y
+	; lda #128
+	; sta M7X
+	; stz M7X
+
 	rts
 .endproc
 

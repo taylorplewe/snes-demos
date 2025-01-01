@@ -1,3 +1,4 @@
+if ($args.count -gt 0) { set-location $args[0] }
 $gamename = split-path -leaf $pwd
 
 write-output "assembling..."
@@ -9,3 +10,5 @@ ld65 -C ..\lorom.cfg -o "bin\$gamename.sfc" bin\main.o
 if ($LASTEXITCODE -ne 0) { return }
 
 & "bin\$gamename.sfc" # default program = Mesen
+
+if ($args.count -gt 0) { set-location .. }
