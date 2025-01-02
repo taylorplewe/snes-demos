@@ -40,6 +40,10 @@ reset:
 	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
 	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
+	; EXT BG Mode 7
+	lda #SETINI_M7EXTBG
+	sta SETINI
+
 	; turn off screen for PPU writes
 	lda #INIDISP_BLANK
 	sta INIDISP
@@ -84,8 +88,11 @@ nmi:
 	stx OAMADDL
 	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
 
-	jsr hdma::run
-	jsr hdma::do_m7
+	lda hdma::hmda_ready
+	beq :+
+		jsr hdma::run
+		jsr hdma::do_m7
+	:
 
 	plp
 	ply

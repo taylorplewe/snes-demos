@@ -2,15 +2,17 @@
 .scope hdma
 
 	.zeropage
+hmda_ready: .res 1
 x_pos: .res 2
 y_pos: .res 2
 angle: .res 1
 
 	.code
 
-M7AD_VALS = $200
+M7A_VALS = $200
 M7B_VALS = $300
 M7C_VALS = $400
+M7D_VALS = $500
 
 persp112_8: .incbin "../bin/persp112_8.bin"
 persp112_8_len = *-persp112_8
@@ -18,21 +20,25 @@ persp112_8_len = *-persp112_8
 .proc init
 	; write 0 to M7 A,B,C and D and disable HDMA for the first 112 scanlines
 	lda #112
-	sta M7AD_VALS
+	sta M7A_VALS
 	sta M7B_VALS
 	sta M7C_VALS
-	stz M7AD_VALS+1
+	sta M7D_VALS
+	stz M7A_VALS+1
 	stz M7B_VALS+1
 	stz M7C_VALS+1
-	stz M7AD_VALS+2
+	stz M7D_VALS+1
+	stz M7A_VALS+2
 	stz M7B_VALS+2
 	stz M7C_VALS+2
+	stz M7D_VALS+2
 
 	; then do the fancy stuff for the last 112 scanlines
 	lda #$80 | 112
-	sta M7AD_VALS+3
+	sta M7A_VALS+3
 	sta M7B_VALS+3
 	sta M7C_VALS+3
+	sta M7D_VALS+3
 	rts
 .endproc
 
@@ -40,10 +46,10 @@ persp112_8_len = *-persp112_8
 	lda #0
 	sta HDMAEN
 
-	dma_set 1, DMAP_1REG_2WR, M7AD_VALS, M7A
-	dma_set 2, DMAP_1REG_2WR, M7AD_VALS, M7D
-	dma_set 3, DMAP_1REG_2WR, M7B_VALS, M7B
-	dma_set 4, DMAP_1REG_2WR, M7C_VALS, M7C
+	dma_set 1, DMAP_1REG_2WR, M7A_VALS, M7A
+	dma_set 2, DMAP_1REG_2WR, M7B_VALS, M7B
+	dma_set 3, DMAP_1REG_2WR, M7C_VALS, M7C
+	dma_set 4, DMAP_1REG_2WR, M7D_VALS, M7D
 
 .endproc
 
@@ -53,7 +59,14 @@ persp112_8_len = *-persp112_8
 	rts
 .endproc
 
-; y = 0 -> move forward; 1 -> move backwards; 2 -> strafe right; 3 -> strafe left
+.enum Dir
+	Forward
+	Backward
+	StrafeLeft
+	StrafeRight
+.endenum
+
+; y = 0 -> move forward; 1 -> move backwards; 2 -> strafe left; 3 -> strafe right
 .proc move
 	php
 	; x
@@ -61,20 +74,20 @@ persp112_8_len = *-persp112_8
 		lda angle
 		jsr cos
 		a16
-		cpy #0
+		cpy #Dir::Backward
 		beq :+
-		cpy #2
+		cpy #Dir::StrafeLeft
 		beq :+
 			eor #$ffff
 			inc a
-			bra :+
 		:
-		.repeat 8
+
+		.repeat 7
 			asr16
 		.endrepeat
-		cpy #2
+		cpy #Dir::StrafeLeft
 		beq :+
-		cpy #3
+		cpy #Dir::StrafeRight
 		beq :+
 			clc
 			adc x_pos
@@ -90,21 +103,19 @@ persp112_8_len = *-persp112_8
 		lda angle
 		jsr sin
 		a16
-		cpy #0
+		cpy #Dir::Backward
 		beq :+
-		cpy #2
+		cpy #Dir::StrafeLeft
 		beq :+
 			eor #$ffff
 			inc a
 		:
-		eor #$ffff
-		inc a
-		.repeat 8
+		.repeat 7
 			asr16
 		.endrepeat
-		cpy #2
+		cpy #Dir::StrafeLeft
 		beq :+
-		cpy #3
+		cpy #Dir::StrafeRight
 		beq :+
 			clc
 			adc y_pos
@@ -145,25 +156,25 @@ persp112_8_len = *-persp112_8
 	lda JOY1L
 	bit #JOY_U
 	beq :+
-		ldy #0
+		ldy #Dir::Forward
 		jsr move
 		bra :++
 	:
 	bit #JOY_D
 	beq :+
-		ldy #1
+		ldy #Dir::Backward
 		jsr move
 	:
 	lda JOY1L
 	bit #JOY_SHOULDER_L
 	beq :+
-		ldy #2
+		ldy #Dir::StrafeLeft
 		jsr move
 		bra :++
 	:
 	bit #JOY_SHOULDER_R
 	beq :+
-		ldy #3
+		ldy #Dir::StrafeRight
 		jsr move
 	:
 	a8
@@ -172,18 +183,18 @@ persp112_8_len = *-persp112_8
 
 .proc calc_persp_rot_m7_vals
 	is_cos_neg = local
-	is_sin_neg = local+1
-	cos8 = local+2
-	sin8 = local+3
+	is_sin_neg = local+2
+	cos8 = local+4
+	sin8 = local+5
 
 	; calulate cos for later
-	stz is_cos_neg
 	lda angle
 	clc
 	adc #64
 	pha
 	jsr cos
 	a16
+	stz is_cos_neg
 	bpl :+
 		eor #$ffff
 		inc a
@@ -195,10 +206,10 @@ persp112_8_len = *-persp112_8
 	sta cos8
 
 	; calculate sin for later
-	stz is_sin_neg
 	pla
 	jsr sin
 	a16
+	stz is_sin_neg
 	bpl :+
 		eor #$ffff
 		inc a
@@ -224,56 +235,41 @@ persp112_8_len = *-persp112_8
 		tay
 		a8
 
-		; m7a, m7d (cos)
+		; m7a, m7d (cos and -cos)
 		mul @persp, cos8
-		xba
 		a16
-		and #$ff
-		sta M7AD_VALS, y
-		a8
-		lda is_cos_neg
-		beq :+
-			a16
-			lda M7AD_VALS, y
+		.repeat 7
+			lsr a
+		.endrepeat
+		sta M7A_VALS, y
+		ldx is_cos_neg
+		bne :+
 			eor #$ffff
 			inc a
-			sta M7AD_VALS, y
-			a8
+			sta M7A_VALS, y
 		:
-
-		; m7b (sin)
-		mul @persp, sin8
-		xba
-		a16
-		and #$ff
-		sta M7B_VALS, y
+		eor #$ffff
+		inc a
+		sta M7D_VALS, y
 		a8
-		lda is_sin_neg
-		beq :+
-			a16
-			lda M7B_VALS, y
+
+		; m7b, m7c (sin and -sin)
+		mul @persp, sin8
+		a16
+		.repeat 7
+			lsr a
+		.endrepeat
+		sta M7B_VALS, y
+		ldx is_sin_neg
+		bne :+
 			eor #$ffff
 			inc a
 			sta M7B_VALS, y
-			a8
 		:
-
-		; m7c (-sin)
-		mul @persp, sin8
-		xba
-		a16
-		and #$ff
+		; eor #$ffff
+		; inc a
 		sta M7C_VALS, y
 		a8
-		lda is_sin_neg
-		bne :+
-			a16
-			lda M7C_VALS, y
-			eor #$ffff
-			inc a
-			sta M7C_VALS, y
-			a8
-		:
 
 		ply
 		iny
@@ -285,78 +281,15 @@ persp112_8_len = *-persp112_8
 .endproc
 
 .proc update
+	stz hmda_ready
 	jsr setup
 	jsr control
 	jsr calc_persp_rot_m7_vals
+	inc hmda_ready
+	rts
 .endproc
 
 .proc do_m7
-	; move diagonally
-	; a16
-	; i8
-	; lda counter
-	; lsr a
-	; tax
-	; xba
-	; tay
-	; xba
-	; a8
-	; stx BG1HOFS
-	; sty BG1HOFS
-	; stx BG1VOFS
-	; sty BG1VOFS
-	; stx M7Y
-	; sty M7Y
-	; a16
-	; clc
-	; adc #$80
-	; a8
-	; sta M7X
-	; xba
-	; sta M7X
-	; i16
-
-	; still
-	; stz BG1HOFS
-	; stz BG1HOFS
-	; stz BG1VOFS
-	; stz BG1VOFS
-	; stz M7Y
-	; stz M7Y
-	; lda #128
-	; sta M7X
-	; stz M7X
-
-	; move down
-	; a16
-	; i8
-	; lda counter
-	; lsr a
-	; tax
-	; xba
-	; tay
-	; xba
-	; sec
-	; sbc #112
-	; a8
-	; ; m7y = 112
-	; 	; sta M7Y
-	; 	; xba
-	; 	; sta M7Y
-	; stz BG1HOFS
-	; stz BG1HOFS
-	; stx BG1VOFS
-	; sty BG1VOFS
-	; ; m7y = 0
-	; 	stx M7Y
-	; 	sty M7Y
-	; lda #128
-	; sta M7X
-	; stz M7X
-	; i16
-	
-	; controls
-	.a8
 	lda x_pos+1
 	sta BG1HOFS
 	stz BG1HOFS
@@ -376,15 +309,6 @@ persp112_8_len = *-persp112_8
 	lda y_pos+1
 	sta M7Y
 	stz M7Y
-	; stz BG1HOFS
-	; stz BG1HOFS
-	; stz BG1VOFS
-	; stz BG1VOFS
-	; stz M7Y
-	; stz M7Y
-	; lda #128
-	; sta M7X
-	; stz M7X
 
 	rts
 .endproc

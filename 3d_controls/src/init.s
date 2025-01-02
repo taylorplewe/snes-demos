@@ -42,11 +42,9 @@ init_ppu:
 		lda #OBSEL_16x16_32x32
 		sta OBSEL
 
-	; enable bg1 & objs
 	lda #TMSW_BG1
 	sta TM
 	
-	; mode 1
 	lda #BGMODE_MODE7
 	sta BGMODE
 

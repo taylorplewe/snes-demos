@@ -28,7 +28,14 @@ tank: .tag Tank
 	rts
 .endproc
 
-; y = 0 if moving forward, !0 otherwise
+.enum Dir
+	Forward
+	Backward
+	StrafeLeft
+	StrafeRight
+.endenum
+
+; y = 0 = forward, 1 = backward, 2 = strafe left, 3 = strafe right
 .proc move
 	php
 	a8
@@ -36,7 +43,9 @@ tank: .tag Tank
 		lda tank + Tank::angle
 		jsr cos
 		a16
-		cpy #0
+		cpy #Dir::Forward
+		beq :+
+		cpy #Dir::StrafeRight
 		beq :+
 			eor #$ffff
 			inc a
@@ -44,15 +53,27 @@ tank: .tag Tank
 		.repeat 6
 			asr16
 		.endrepeat
-		clc
-		adc tank + Tank::x_pos
-		sta tank + Tank::x_pos
+		cpy #Dir::StrafeLeft
+		beq :+
+		cpy #Dir::StrafeRight
+		beq :+
+			clc
+			adc tank + Tank::x_pos
+			sta tank + Tank::x_pos
+			bra :++
+		:
+			clc
+			adc tank + Tank::y_pos
+			sta tank + Tank::y_pos
+		:
 	; y (sin)
 		a8
 		lda tank + Tank::angle
 		jsr sin
 		a16
-		cpy #0
+		cpy #Dir::Forward
+		beq :+
+		cpy #Dir::StrafeLeft
 		beq :+
 			eor #$ffff
 			inc a
@@ -60,9 +81,19 @@ tank: .tag Tank
 		.repeat 6
 			asr16
 		.endrepeat
-		clc
-		adc tank + Tank::y_pos
-		sta tank + Tank::y_pos
+		cpy #Dir::StrafeLeft
+		beq :+
+		cpy #Dir::StrafeRight
+		beq :+
+			clc
+			adc tank + Tank::y_pos
+			sta tank + Tank::y_pos
+			bra :++
+		:
+			clc
+			adc tank + Tank::x_pos
+			sta tank + Tank::x_pos
+		:
 	plp
 	rts
 .endproc
@@ -94,13 +125,25 @@ tank: .tag Tank
 	lda JOY1L
 	bit #JOY_U
 	beq :+
-		ldy #0
+		ldy #Dir::Forward
 		jsr move
 		bra :++
 	:
 	bit #JOY_D
 	beq :+
-		ldy #1
+		ldy #Dir::Backward
+		jsr move
+	:
+	lda JOY1L
+	bit #JOY_SHOULDER_L
+	beq :+
+		ldy #Dir::StrafeLeft
+		jsr move
+		bra :++
+	:
+	bit #JOY_SHOULDER_R
+	beq :+
+		ldy #Dir::StrafeRight
 		jsr move
 	:
 	a8
