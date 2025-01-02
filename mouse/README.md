@@ -1,1 +1,3 @@
-![mouse](mouse.png)
+SNES mouse peripheral
+
+![mouse](mouse.gif)
