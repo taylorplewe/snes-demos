@@ -79,7 +79,6 @@ nmi:
 	pha
 	phx
 	phy
-	php
 	a8
 	i16
 
@@ -94,7 +93,6 @@ nmi:
 		jsr hdma::do_m7
 	:
 
-	plp
 	ply
 	plx
 	pla
