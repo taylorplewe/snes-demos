@@ -67,7 +67,7 @@ nmi:
 	;oam(sprites)
 	ldx #0
 	stx OAMADDL
-	m_dma_ch0 DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
 
 	ply
 	plx

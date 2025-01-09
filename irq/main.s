@@ -52,7 +52,6 @@ reset:
 	sta INIDISP
 
 forever:
-	nop
 	stz scanline
 	jsr wait_for_input
 

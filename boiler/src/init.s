@@ -5,7 +5,7 @@ TOTAL_NUM_PAL_BYTES = *-pals
 init_ppu:
 	; palettes
 	stz CGADD
-	m_dma_ch0 DMAP_1REG_2WR, pals, CGDATA, TOTAL_NUM_PAL_BYTES
+	dma 0, DMAP_1REG_2WR, pals, CGDATA, TOTAL_NUM_PAL_BYTES
 
 	stz CGADD
 	lda #0
@@ -17,7 +17,7 @@ init_ppu:
 	stz VMADDH
 	lda #VMAIN_WORDINC
 	sta VMAIN
-	m_dma_ch0 DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
+	dma 0, DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
 
 	; bg
 		; tilemap

@@ -30,24 +30,6 @@ _mul:
 	a8
 	rts
 
-; NOTE: set DMAP0 beforehand!!
-; Also don't forget to set the corresponding address register beforehand e.g. set CGADD before doing the DMA on CGDATA
-; params:
-;	a - destination PPU register; $21aa
-;	x - low 16 bits of source address; -------- xxxxxxxx xxxxxxxx
-;	b - high 8 bits of source address; bbbbbbbb -------- --------
-;	y - # of bytes to transfer
-dma_ch0:
-	sta BBAD0
-	stx A1T0L
-	xba
-	sta A1B0
-	sty DAS0L
-
-	lda #1
-	sta MDMAEN ; run it
-	rts
-
 ; NOTE: if you're ever desparate for frame time to do stuff (that doesn't need controller input), place it before this function, which just waits until controller input is ready, gets called
 wait_for_input:
 	lda HVBJOY
