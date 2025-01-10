@@ -5,9 +5,10 @@ x_pos: .res 1
 
 	.code
 .proc init
-	lda #WSEL(WSEL_LAYER_OBJ, WSEL_W1, WSEL_NOINVERT)
+	lda #WSEL(WSEL_LAYER_OBJ, WSEL_W1, WSEL_INVERT)
 	sta WOBJSEL
-	stz x_pos
+	lda #150
+	sta x_pos
 	stz WH0
 	stz WH1
 	; don't need if only enabling one window
@@ -21,9 +22,9 @@ x_pos: .res 1
 .proc update
 	dec x_pos
 	lda x_pos
-	cmp #256-16
-	bcc :+
-		lda #256-16
+	cmp #80
+	bcs :+
+		lda #150
 		sta x_pos
 	:
 	rts

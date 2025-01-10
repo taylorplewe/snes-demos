@@ -44,7 +44,7 @@
 	; dma/hdma
 	.a8
 	.i16
-	.macro dma_set chan, dmap, src, ppureg, count
+	.macro dma_set chan, reg, dmap, src, count
 		.local CHANOFFS
 		CHANOFFS = chan * $10
 
@@ -54,21 +54,21 @@
 		stx A1T0L +CHANOFFS
 		lda #^src
 		sta A1B0 +CHANOFFS
-		lda #<ppureg
+		lda #<reg
 		sta BBAD0 +CHANOFFS
 		.ifnblank count
 		ldx #count
 		stx DAS0L +CHANOFFS
 		.endif
 	.endmacro
-	.macro dma chan, dmap, src, ppureg, count
-		dma_set chan, dmap, src, ppureg, count
+	.macro dma chan, reg, dmap, src, count
+		dma_set chan, reg, dmap, src, count
 
 		lda #1 << chan
 		sta MDMAEN ; run it
 	.endmacro
-	.macro hdma chan, dmap, src, ppureg, count
-		dma_set chan, dmap, src, ppureg, count
+	.macro hdma chan, reg, dmap, src, count
+		dma_set chan, reg, dmap, src, count
 
 		lda #1 << chan
 		sta HDMAEN ; run it

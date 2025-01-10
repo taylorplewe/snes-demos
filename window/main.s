@@ -29,7 +29,7 @@ reset:
 	stz WMADDL
 	stz WMADDM
 	stz WMADDH
-	dma 0, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, WMDATA, 0 ; 0 = 64k because it dec's then checks
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 0 ; 0 = 64k because it dec's then checks
 	sta MDMAEN ; fire again for next 64k ($1000-$1fff)
 
 	ldx #$1fff
@@ -73,7 +73,7 @@ nmi:
 	;oam(sprites)
 	ldx #0
 	stx OAMADDL
-	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
 
 	jsr window::vblank
 
@@ -99,6 +99,12 @@ draw_orca:
 	i16
 	rts
 
-chr:
-	.incbin "bin/chr.bin"
-CHR_LEN = *-chr
+orca_chr:
+	.incbin "bin/orca.bin"
+orca_chr_len = *-orca_chr
+
+	.segment "BANK1"
+amst_chr:
+	.incbin "bin/amst1.bin"
+	.incbin "bin/amst2.bin"
+amst_chr_len = *-amst_chr
