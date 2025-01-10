@@ -1,7 +1,10 @@
 .scope window
 
-BG_WINDOW_SIZE = 48
+BG_WINDOW_SIZE = 116
 BG_WINDOW_SPEED = 2
+
+WH2_HDMA_TABLE_ADDR = $200
+WH3_HDMA_TABLE_ADDR = $300
 
 	.zeropage
 obj_x:	.res 1
@@ -29,6 +32,10 @@ bg_y:	.res 1
 		stz WH3
 	lda #TMSW_OBJ | TMSW_BG1
 	sta TMW
+
+	; set up hdma
+	dma_set 1, WH2, DMAP_1REG_1WR, WH2_HDMA_TABLE_ADDR
+	dma_set 2, WH3, DMAP_1REG_1WR, WH3_HDMA_TABLE_ADDR
 	rts
 .endproc
 
@@ -42,7 +49,8 @@ bg_y:	.res 1
 	:
 
 	jsr control_bg_window
-	rts
+	jmp fill_hdma_tables
+	; rts
 .endproc
 
 .proc vblank
@@ -52,13 +60,17 @@ bg_y:	.res 1
 		clc
 		adc #15
 		sta WH1
+	
+	; fire hdma for window 2 (bg1)
+	lda #%110
+	sta HDMAEN
 
 	; window 2 (bg1)
-		lda bg_x
-		sta WH2
-		clc
-		adc #BG_WINDOW_SIZE
-		sta WH3
+		; lda bg_x
+		; sta WH2
+		; clc
+		; adc #BG_WINDOW_SIZE
+		; sta WH3
 	rts
 .endproc
 
@@ -121,6 +133,58 @@ bg_y:	.res 1
 		a16
 	lr_end:
 	a8
+	rts
+.endproc
+
+.proc fill_hdma_tables
+	; TOP section (blank until <bg_y> # of scanlines)
+	ldx #0
+	lda bg_y
+	beq :+
+		; blank for <bg_y> # of scanlines
+		sta WH2_HDMA_TABLE_ADDR, x
+		sta WH3_HDMA_TABLE_ADDR, x
+		inx
+		stz WH3_HDMA_TABLE_ADDR, x
+		lda #1
+		sta WH2_HDMA_TABLE_ADDR, x
+		inx
+	:
+
+	; MAIN section (where bg is visible)
+	lda #$80 | BG_WINDOW_SIZE
+	sta WH2_HDMA_TABLE_ADDR, x
+	sta WH3_HDMA_TABLE_ADDR, x
+	inx
+	ldy #BG_WINDOW_SIZE
+	lda bg_x
+	clc
+	adc #BG_WINDOW_SIZE
+	xba
+	lda bg_x
+	loop:
+		sta WH2_HDMA_TABLE_ADDR, x
+		xba
+		sta WH3_HDMA_TABLE_ADDR, x
+		xba
+		inx
+		dey
+		bne loop
+
+	; BOTTOM section (blank for rest of screen)
+	lda bg_y
+	cmp #223-BG_WINDOW_SIZE
+	bcs :+
+		lda #223-BG_WINDOW_SIZE
+		sec
+		sbc bg_y
+		sta WH2_HDMA_TABLE_ADDR, x
+		sta WH3_HDMA_TABLE_ADDR, x
+		inx
+		stz WH3_HDMA_TABLE_ADDR, x
+		lda #1
+		sta WH2_HDMA_TABLE_ADDR, x
+	:
 	rts
 .endproc
 

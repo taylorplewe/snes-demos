@@ -67,8 +67,8 @@
 		lda #1 << chan
 		sta MDMAEN ; run it
 	.endmacro
-	.macro hdma chan, reg, dmap, src, count
-		dma_set chan, reg, dmap, src, count
+	.macro hdma chan, reg, dmap, src
+		dma_set chan, reg, dmap, src
 
 		lda #1 << chan
 		sta HDMAEN ; run it
