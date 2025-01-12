@@ -44,34 +44,51 @@
 	; dma/hdma
 	.a8
 	.i16
-	.macro dma_set chan, dmap, src, ppureg, count
+	.macro dma_set chan, reg, dmap, src, count
 		.local CHANOFFS
 		CHANOFFS = chan * $10
 
 		lda #dmap
 		sta DMAP0 +CHANOFFS
-		ldx #src & $ffff
+		ldx #.loword(src)
 		stx A1T0L +CHANOFFS
 		lda #^src
 		sta A1B0 +CHANOFFS
-		lda #<ppureg
+		lda #<reg
 		sta BBAD0 +CHANOFFS
 		.ifnblank count
 		ldx #count
 		stx DAS0L +CHANOFFS
 		.endif
 	.endmacro
-	.macro dma chan, dmap, src, ppureg, count
-		dma_set chan, dmap, src, ppureg, count
+	.macro dma chan, reg, dmap, src, count
+		dma_set chan, reg, dmap, src, count
 
 		lda #1 << chan
 		sta MDMAEN ; run it
 	.endmacro
-	.macro hdma chan, dmap, src, ppureg, count
-		dma_set chan, dmap, src, ppureg, count
+	.macro hdma chan, reg, dmap, src
+		dma_set chan, reg, dmap, src
 
 		lda #1 << chan
 		sta HDMAEN ; run it
+	.endmacro
+
+	; oam (sprites)
+	.macro oam_buff_obj _x, _y, info, tile, hi
+		lda _x
+		sta OAM_X, x
+		lda _y
+		sta OAM_Y, x
+		lda info
+		sta OAM_INFO, x
+		lda tile
+		sta OAM_TILE, x
+		lda hi
+		jsr set_oam_hi_bits
+		.repeat 4
+		inx
+		.endrepeat
 	.endmacro
 
 	; mode 7

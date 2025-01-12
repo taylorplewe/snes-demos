@@ -342,7 +342,7 @@ TSW				= $212F ; Window Mask Destination Registers
 	TMSW_BG3 = %00000100
 	TMSW_BG4 = %00001000
 	TMSW_OBJ = %00010000
-CGWSEL			= $2130 ; Color Math Registers
+CGWSEL			= $2130 ; Color Addition Select
 ; $2130  wb+++-
 ;         ccmm--sd
 ;         cc       = Clip colors to black before math
@@ -357,7 +357,18 @@ CGWSEL			= $2130 ; Color Math Registers
 ;                    11 => Always
 ;               s  = Add subscreen (instead of fixed color)
 ;                d = Direct color mode for 256-color BGs
-CGADSUB			= $2131 ; Color Math Registers
+	CGWSEL_DIRECT_COLOR            = %00000001
+	CGWSEL_SUBSCREEN               = %00000010
+	CGWSEL_FIXED_COLOR             = %00000000
+	CGWSEL_PREVENT_NEVER           = %00000000
+	CGWSEL_PREVENT_OUTSIDE_WINDOW  = %00010000
+	CGWSEL_PREVENT_INSIDE_WINDOW   = %00100000
+	CGWSEL_PREVENT_ALWAYS          = %00110000
+	CGWSEL_CLIPCOLS_NEVER          = %00000000
+	CGWSEL_CLIPCOLS_OUTSIDE_WINDOW = %01000000
+	CGWSEL_CLIPCOLS_INSIDE_WINDOW  = %10000000
+	CGWSEL_CLIPCOLS_ALWAYS         = %11000000
+CGADSUB			= $2131 ; Color Math Designation
 ; $2131  wb+++-
 ;         shbo4321
 ;         s             = Add/subtract select
@@ -365,11 +376,40 @@ CGADSUB			= $2131 ; Color Math Registers
 ;                         1 => Subtract the colors
 ;          h            = Half color math.^
 ;           4/3/2/1/o/b = Enable color math on BG1/BG2/BG3/BG4/OBJ/Backdrop ^^
-COLDATA			= $2132 ; Color Math Registers
+	CGADSUB_BG1       = %00000001
+	CGADSUB_BG2       = %00000010
+	CGADSUB_BG3       = %00000100
+	CGADSUB_BG4       = %00001000
+	CGADSUB_OBJ       = %00010000
+	CGADSUB_BACKDROP  = %00100000
+	CGADSUB_HALFCOL   = %01000000
+	CGADSUB_ADD       = %00000000
+	CGADSUB_SUBTRACT  = %10000000
+COLDATA			= $2132 ; Fixed Color Data
 ; $2132  wb+++-
 ;         bgrccccc
 ;         b/g/r    = Which color plane(s) to set the intensity for.
 ;            ccccc = Color intensity.
+; So basically, to set an orange you'd do something along the lines of:
+;		lda #COLDATA_R | 31 ; %001_11111, $3f
+;		sta COLDATA
+;		lda #COLDATA_G | 15 ; %010_01111, $4f
+;		sta COLDATA
+;		lda #COLDATA_B | 0  ; %100_00000, $80
+;		sta COLDATA
+	COLDATA_R = %00100000
+	COLDATA_G = %01000000
+	COLDATA_B = %10000000
+
+; bit 1 of CGWSEL and bits 6-7 of CGADSUB control how color math works:
+;		0 00: Add the fixed color. R, G, and B are added separately, and clipped to the max.
+;		0 01: Add the fixed color, and divide the result by 2 before clipping (unless the Color Window is clipping colors here).
+;		0 10: Subtract the fixed color from the pixel. For example, if the pixel is (31,31,0) and the fixed color is (0,16,16), the result is (31,15,0).
+;		0 11: Subtract the fixed color, and divide the result by 2 (unless CW etc).
+;		1 00: Add the corresponding subscreen pixel, or the fixed color if it's the subscreen backdrop.
+;		1 01: Add the subscreen pixel and divide by 2 (unless CW etc), or add the fixed color with no division.
+;		1 10: Subtract the subscreen pixel/fixed color.
+;		1 11: Subtract the subscreen pixel and divide by 2 (unless CW etc), or sub the fixed color with no division.
 SETINI			= $2133 ; Screen Mode Select Register
 ; $2133  wb+++-
 ;         se--poIi

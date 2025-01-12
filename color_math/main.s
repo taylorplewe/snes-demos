@@ -15,22 +15,25 @@ joy1_prev:		.res 2
 joy1_pressed:	.res 2
 	
 	.code
+	.include "src/common.s"
+	.include "src/init.s"
+	.include "src/window.s"
+	.include "src/color.s"
+zero: .byte 0
 reset:
-	; go into native mode lets gooooo
 	clc
-	xce ; Now you're playing with ~power~
+	xce
 	i16
 	a8
 
 	; clear all RAM
-	ldx #0
-	@clearallram:
-		stz 0, x
-		inx
-		cpx #$2000
-		bcc @clearallram
+	stz WMADDL
+	stz WMADDM
+	stz WMADDH
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 0 ; 0 = 64k because it dec's then checks
+	sta MDMAEN ; fire again for next 64k ($1000-$1fff)
 
-	dex
+	ldx #$1fff
 	txs ; stack now starts at $1fff
 
 	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
@@ -41,6 +44,7 @@ reset:
 	sta INIDISP
 
 	jsr init_ppu
+	jsr color::init
 
 	; turn screen back on & set brightness
 	lda #$f
@@ -48,8 +52,12 @@ reset:
 
 forever:
 	jsr wait_for_input
+	jsr set_joy1_pressed
 
 	jsr clear_oam
+
+	jsr draw_orca
+	jsr color::update
 
 	; end of frame
 	a16
@@ -67,17 +75,40 @@ nmi:
 	;oam(sprites)
 	ldx #0
 	stx OAMADDL
-	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
 
 	ply
 	plx
 	pla
 	rti
 
+; draw orca
+draw_orca:
+	i8
+	ldx oam_lo_ind
+	i16
 
-	.include "src/common.s"
-	.include "src/init.s"
+	; bottom, larger portion
+	oam_buff_obj #128-16, #112-16, #SPRINFO_PRIOR3 | SPRINFO_PAL(0), #$40, #SPR_HI_LARGE
 
-chr:
-	.incbin "bin/chr.bin"
-CHR_LEN = *-chr
+	; fin
+	oam_buff_obj #128-16, #(112-16)-16, #SPRINFO_PRIOR3 | SPRINFO_PAL(0), #0, #0
+
+	i8
+	stx oam_lo_ind
+	i16
+	rts
+
+orca_chr:
+	.incbin "bin/orca.bin"
+orca_chr_len = *-orca_chr
+
+water_chr:
+	.incbin "bin/water.bin"
+water_chr_len = * - water_chr
+
+	.segment "BANK1"
+amst_chr:
+	.incbin "bin/amst1.bin"
+	.incbin "bin/amst2.bin"
+amst_chr_len = *-amst_chr

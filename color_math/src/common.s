@@ -46,25 +46,15 @@ set_joy1_pressed:
 	a8
 	rts
 
+OAM_MUSH_LO: .byte 224
+OAM_MUSH_HI: .byte $ff
 clear_oam:
-	ldx #0
-	stz oam_lo_ind
-	lda #@oam_mush_lo
-	@loloop:
-		sta OAM_DMA_ADDR_LO, x
-		inx
-		cpx #512
-		bcc @loloop
-	ldx #0
-	lda #@oam_mush_hi
-	@hiloop:
-		sta OAM_DMA_ADDR_HI, x
-		inx
-		cpx #32
-		bcc @hiloop
+	ldx #OAM_DMA_ADDR_LO
+	stx WMADDL
+	stz WMADDH
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, OAM_MUSH_LO, 512
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, OAM_MUSH_HI, 32
 	rts
-	@oam_mush_lo = 224
-	@oam_mush_hi = $ff
 
 ; params:
 ;	x - oam_lo_ind
@@ -73,6 +63,7 @@ set_oam_hi_bits:
 	@new_hi_bits		= local
 	@oam_hi_ind			= local+1
 	@oam_hi_mask		= local+2
+	phx
 	pha
 	a16
 	txa
@@ -108,4 +99,5 @@ set_oam_hi_bits:
 	ora @new_hi_bits
 	sta OAM_DMA_ADDR_HI, x
 	i16
+	plx
 	rts
