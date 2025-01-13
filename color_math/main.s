@@ -16,10 +16,11 @@ joy1_pressed:	.res 2
 	
 	.code
 	.include "src/common.s"
+	.include "src/debug.s"
 	.include "src/init.s"
 	.include "src/window.s"
 	.include "src/color.s"
-zero: .byte 0
+zero: .word 0
 reset:
 	clc
 	xce
@@ -45,6 +46,7 @@ reset:
 
 	jsr init_ppu
 	jsr color::init
+	jsr debug::init
 
 	; turn screen back on & set brightness
 	lda #$f

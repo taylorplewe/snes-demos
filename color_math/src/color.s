@@ -22,6 +22,9 @@ prevent_math_method: .res 1
 counter: .res 2
 
 	.code
+r_hdma_table: .incbin "../bin/r_hdma_vals.bin"
+g_hdma_table: .incbin "../bin/g_hdma_vals.bin"
+b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 .proc init
 	; lda #COLDATA_R | 15
 	; sta COLDATA
@@ -47,26 +50,39 @@ counter: .res 2
 	inc counter
 	a8
 
+	jsr update_fixed_colors
 	jsr control
 	jsr set_regs
 
-	bne end
-	lda counter
-	lsr a
-	lsr a
-	lsr a
-	pha
-	ora #COLDATA_R
-	sta COLDATA
-	pla
-	pha
-	ora #COLDATA_G
-	sta COLDATA
-	pla
-	ora #COLDATA_B
-	sta COLDATA
-	end:
 	rts
+.endproc
+
+.proc update_fixed_colors
+	lda demo_mode
+	cmp #DemoMode::Fade
+	beq fade
+	; gradient:
+		; fire 3 HDMAs for R, G and B
+		hdma 1, COLDATA, DMAP_1REG_1WR, r_hdma_table
+		hdma 2, COLDATA, DMAP_1REG_1WR, g_hdma_table
+		hdma 3, COLDATA, DMAP_1REG_1WR, b_hdma_table
+		rts
+	fade:
+		lda counter
+		lsr a
+		lsr a
+		lsr a
+		pha
+		ora #COLDATA_R
+		sta COLDATA
+		pla
+		pha
+		ora #COLDATA_G
+		sta COLDATA
+		pla
+		ora #COLDATA_B
+		sta COLDATA
+		rts
 .endproc
 
 .proc control

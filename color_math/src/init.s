@@ -19,23 +19,29 @@ init_ppu:
 	; palettes (first amsterdam, then orca)
 	stz CGADD
 	dma 0, CGDATA, DMAP_1REG_2WR, amst_pals, amst_pals_len
+
+	lda #32
+	sta CGADD ; make room for the 2bpp palette
 	dma 0, CGDATA, DMAP_1REG_2WR, water_pals, water_pals_len
 
+	; obj pal
 	lda #128
 	sta CGADD
 	dma 0, CGDATA, DMAP_1REG_2WR, orca_pals, orca_pals_len
 
-	; chr
+	; obj chr
 	stz VMADDL
 	stz VMADDH
 	lda #VMAIN_WORDINC
 	sta VMAIN
 	dma 0, VMDATAL, DMAP_2REG_1WR, orca_chr, orca_chr_len
 
+	; bg 1 chr
 	ldx #$4000
 	stx VMADDL
 	dma 0, VMDATAL, DMAP_2REG_1WR, amst_chr, amst_chr_len
 
+	; bg 2 chr
 	ldx #$2000
 	stx VMADDL
 	dma 0, VMDATAL, DMAP_2REG_1WR, water_chr, water_chr_len
@@ -57,16 +63,25 @@ init_ppu:
 		; scroll
 		stz BG1HOFS
 		stz BG1HOFS
-		lda #<$ffff
+		lda #<-1
 		sta BG1VOFS
-		lda #>$ffff
+		lda #>-1
 		sta BG1VOFS
+		lda #<-1
+		sta BG2VOFS
+		lda #>-1
+		sta BG2VOFS
+
+		lda #<-1
+		sta BG3HOFS
+		lda #>-1
+		sta BG3HOFS
 	; obj
 		lda #OBSEL_16x16_32x32
 		sta OBSEL
 
 	; enable bg1 & objs
-	lda #TMSW_OBJ | TMSW_BG1
+	lda #TMSW_OBJ | TMSW_BG1 | TMSW_BG3
 	sta TM
 
 	lda #TMSW_BG2
