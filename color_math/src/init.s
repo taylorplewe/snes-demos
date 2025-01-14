@@ -107,5 +107,6 @@ init_ppu:
 	ldx #$1400
 	stx VMADDL
 	dma 0, VMDATAL, DMAP_2REG_1WR, water_map, water_map_len
+	dma 0, VMDATAL, DMAP_2REG_1WR, water_map, 256
 
 	rts

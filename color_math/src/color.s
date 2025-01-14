@@ -22,6 +22,10 @@ prevent_math_method: .res 1
 counter: .res 2
 
 	.code
+blend_method_strs:        .addr str::Add, str::Subtract, str::AddThenHalf
+demo_mode_strs:           .addr str::Fade, str::Gradient, str::Subscreen
+prevent_math_method_strs:
+clip_colors_method_strs:  .addr str::Never, str::OutsideWindow, str::InsideWindow, str::Always
 r_hdma_table: .incbin "../bin/r_hdma_vals.bin"
 g_hdma_table: .incbin "../bin/g_hdma_vals.bin"
 b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
@@ -48,11 +52,22 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 .proc update
 	a16
 	inc counter
+
+	lda counter
+	lsr a
 	a8
+	sta BG2HOFS
+	stz BG2HOFS
+	a16
+	lsr a
+	a8
+	sta BG2VOFS
+	stz BG2VOFS
 
 	jsr update_fixed_colors
 	jsr control
 	jsr set_regs
+	jsr print_debug_msgs
 
 	rts
 .endproc
@@ -63,11 +78,14 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 	beq fade
 	; gradient:
 		; fire 3 HDMAs for R, G and B
-		hdma 1, COLDATA, DMAP_1REG_1WR, r_hdma_table
-		hdma 2, COLDATA, DMAP_1REG_1WR, g_hdma_table
-		hdma 3, COLDATA, DMAP_1REG_1WR, b_hdma_table
+		dma_set 1, COLDATA, DMAP_1REG_1WR, r_hdma_table
+		dma_set 2, COLDATA, DMAP_1REG_1WR, g_hdma_table
+		dma_set 3, COLDATA, DMAP_1REG_1WR, b_hdma_table
+		lda #%1110
+		sta HDMAEN
 		rts
 	fade:
+		stz HDMAEN
 		lda counter
 		lsr a
 		lsr a
@@ -206,7 +224,59 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 	rts
 .endproc
 
-.proc vblank
+.proc print_debug_msgs
+	; blend mode
+		ldx #str::BlendMode
+		lda #debug::FontColor::White
+		jsr debug::print
+		lda #0
+		xba
+		lda blend_method
+		asl a
+		tax
+		ldy blend_method_strs, x
+		tyx
+		lda #debug::FontColor::Yellow
+		jsr debug::print
+	; clip mode
+		ldx #str::ClipColors
+		lda #debug::FontColor::White
+		jsr debug::print
+		lda #0
+		xba
+		lda clip_colors_method
+		asl a
+		tax
+		ldy clip_colors_method_strs, x
+		tyx
+		lda #debug::FontColor::Yellow
+		jsr debug::print
+	; prevent mode
+		ldx #str::PreventMath
+		lda #debug::FontColor::White
+		jsr debug::print
+		lda #0
+		xba
+		lda prevent_math_method
+		asl a
+		tax
+		ldy prevent_math_method_strs, x
+		tyx
+		lda #debug::FontColor::Yellow
+		jsr debug::print
+	; demo mode
+		ldx #str::DemoMode
+		lda #debug::FontColor::White
+		jsr debug::print
+		lda #0
+		xba
+		lda demo_mode
+		asl a
+		tax
+		ldy demo_mode_strs, x
+		tyx
+		lda #debug::FontColor::Yellow
+		jsr debug::print
 	rts
 .endproc
 

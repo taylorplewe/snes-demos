@@ -57,6 +57,7 @@ forever:
 	jsr set_joy1_pressed
 
 	jsr clear_oam
+	jsr debug::update
 
 	jsr draw_orca
 	jsr color::update
@@ -78,6 +79,8 @@ nmi:
 	ldx #0
 	stx OAMADDL
 	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
+
+	jsr debug::vblank
 
 	ply
 	plx

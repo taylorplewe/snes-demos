@@ -1,9 +1,9 @@
 .scope str
 	NEWLINE = '['
-	DemoMode: .byte "Demo mode: ", 0
-	ClipColors: .byte "Clip colors: ", 0
-	PreventMath: .byte "Prevent math: ", 0
-	BlendMode: .byte "Blend mode: ", 0
+	DemoMode: .byte "(Y) Demo mode: ", 0
+	ClipColors: .byte "(B) Clip colors: ", 0
+	PreventMath: .byte "(X) Prevent math: ", 0
+	BlendMode: .byte "(A) Blend mode: ", 0
 
 	Fade: .byte "fade[", 0
 	Gradient: .byte "gradient[", 0
@@ -28,10 +28,11 @@
 	Red
 .endenum
 
+SCREEN_BUFF = $500
+
 	.zeropage
 string_addr: .res 3
-tilemap_addr: .res 2
-tile_info_byte: .res 1
+screen_buff_addr: .res 2
 
 	.code
 font_bin: .incbin "../../debug_font.bin"
@@ -40,10 +41,9 @@ font_bin_len = * - font_bin
 font_pals: .incbin "../bin/debug_font_pals.bin"
 font_pals_len = * - font_pals
 
-.proc init
-	ldx #$1b60
-	stx tilemap_addr
+BOTTOM_LEFT_TILE_ADDR = $6c0
 
+.proc init
 	; load debug font palette
 	lda #16
 	sta CGADD
@@ -62,35 +62,36 @@ font_pals_len = * - font_pals
 	lda #$18
 	sta BG3SC
 
-	; clear the BG3 tilemap
+	; clear screen
+	jsr clear_buffer
+	jsr write_buffer_to_vram
+
+	rts
+.endproc
+
+.proc update
+	ldx #BOTTOM_LEFT_TILE_ADDR
+	stx screen_buff_addr
+
+	; jsr clear_buffer
+	; rts
+.endproc
+
+.proc clear_buffer
+	ldx #SCREEN_BUFF
+	stx WMADDL
+	stz WMADDH
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 32*28*2
+	rts
+.endproc
+
+.proc vblank
+	; jsr write_buffer_to_vram
+.endproc
+.proc write_buffer_to_vram
 	ldx #$1800
 	stx VMADDL
-	dma 0, VMDATAL, DMAP_2REG_1WR | DMAP_FIXED_SOURCE, zero, 32*28
-
-	ldx #str::ClipColors
-	lda #FontColor::White
-	jsr print
-
-	ldx #str::OutsideWindow
-	lda #FontColor::Yellow
-	jsr print
-
-	ldx #str::PreventMath
-	lda #FontColor::White
-	jsr print
-
-	ldx #str::Never
-	lda #FontColor::Yellow
-	jsr print
-
-	ldx #str::BlendMode
-	lda #FontColor::White
-	jsr print
-
-	ldx #str::AddThenHalf
-	lda #FontColor::Yellow
-	jsr print
-
+	dma 0, VMDATAL, DMAP_2REG_1WR, SCREEN_BUFF, 32*28*2
 	rts
 .endproc
 
@@ -102,11 +103,9 @@ font_pals_len = * - font_pals
 	asl a
 	asl a
 	ora #(4<<2) | (1<<5) ; palette 4 (2bpp), priority
-	sta tile_info_byte
 	xba
 
-	ldx tilemap_addr
-	stx VMADDL
+	ldx screen_buff_addr
 	ldy #0
 	loop:
 		lda [string_addr], y
@@ -116,16 +115,14 @@ font_pals_len = * - font_pals
 		cmp #str::NEWLINE
 		bne :+
 			a16
-			lda tilemap_addr
-			and #%1111111111100000
+			pha
+			lda screen_buff_addr
+			and #%1111111111000000
 			sec
-			sbc #32
-			sta tilemap_addr
-			sta VMADDL
-			lda #0
+			sbc #64
+			tax
+			pla
 			a8
-			lda tile_info_byte
-			xba
 			iny
 			bra loop
 		:
@@ -133,12 +130,14 @@ font_pals_len = * - font_pals
 		sec
 		sbc #$20
 		a16
-		sta VMDATAL
-		inc tilemap_addr
+		sta SCREEN_BUFF, x
+		inx
+		inx
 		a8
 		iny
 		bra loop
 	end:
+	stx screen_buff_addr
 	rts
 .endproc
 
