@@ -13,6 +13,7 @@ local:			.res 16
 oam_lo_ind:		.res 1
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
+m_hdmaen:       .res 1
 	
 	.code
 	.include "src/common.s"
@@ -45,6 +46,7 @@ reset:
 	sta INIDISP
 
 	jsr init_ppu
+	jsr window::init
 	jsr color::init
 	jsr debug::init
 
@@ -58,6 +60,7 @@ forever:
 
 	jsr clear_oam
 	jsr debug::update
+	jsr window::update
 
 	jsr draw_orca
 	jsr color::update
@@ -81,6 +84,10 @@ nmi:
 	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
 
 	jsr debug::vblank
+	jsr window::vblank
+
+	lda m_hdmaen
+	sta HDMAEN
 
 	ply
 	plx
