@@ -54,6 +54,16 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 	inc counter
 
 	lda counter
+	a8
+	
+	jsr control
+	jsr print_debug_msgs
+	rts
+.endproc
+
+.proc vblank
+	a16
+	lda counter
 	lsr a
 	a8
 	sta BG2HOFS
@@ -65,10 +75,7 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 	stz BG2VOFS
 
 	jsr update_fixed_colors
-	jsr control
 	jsr set_regs
-	jsr print_debug_msgs
-
 	rts
 .endproc
 

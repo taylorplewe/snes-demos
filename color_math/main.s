@@ -74,6 +74,7 @@ forever:
 	bra forever
 
 nmi:
+	a8
 	pha
 	phx
 	phy
@@ -84,7 +85,7 @@ nmi:
 	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
 
 	jsr debug::vblank
-	jsr window::vblank
+	jsr color::vblank
 
 	lda m_hdmaen
 	sta HDMAEN
