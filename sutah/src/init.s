@@ -20,14 +20,14 @@ sky_map_len = * - sky_map
 init_ppu:
 	; palettes
 	stz CGADD
-	dma 0, DMAP_1REG_2WR, pals, CGDATA, TOTAL_NUM_PAL_BYTES
+	dma 0, CGDATA, DMAP_1REG_2WR, pals, TOTAL_NUM_PAL_BYTES
 
 	; sand chr (mode 7) (appears first in VRAM)
 	stz VMADDL
 	stz VMADDH
 	lda #VMAIN_WORDINC
 	sta VMAIN
-	dma 0, DMAP_2REG_1WR, chr, VMDATAL, CHR_LEN
+	dma 0, VMDATAL, DMAP_2REG_1WR, chr, CHR_LEN
 
 	ldx #sky_map_len
 	sta $20
@@ -35,13 +35,13 @@ init_ppu:
 	stz VMADDL
 	lda #$40
 	sta VMADDH
-	dma 0, DMAP_2REG_1WR, sky_chr, VMDATAL, sky_chr_len
+	dma 0, VMDATAL, DMAP_2REG_1WR, sky_chr, sky_chr_len
 
 	; sky map
 	stz VMADDL
 	lda #$78
 	sta VMADDH
-	dma 0, DMAP_2REG_1WR, sky_map, VMDATAL, sky_map_len
+	dma 0, VMDATAL, DMAP_2REG_1WR, sky_map, sky_map_len
 
 	; where is the bg tilemap in vram?
 	lda #$78 ; $2000

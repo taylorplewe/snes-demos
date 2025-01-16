@@ -43,19 +43,21 @@ persp112_8_len = *-persp112_8
 .endproc
 
 .proc setup
-	lda #0
-	sta HDMAEN
+	lda m_hdmaen
+	and #%11100001
+	sta m_hdmaen
 
-	dma_set 1, DMAP_1REG_2WR, M7A_VALS, M7A
-	dma_set 2, DMAP_1REG_2WR, M7B_VALS, M7B
-	dma_set 3, DMAP_1REG_2WR, M7C_VALS, M7C
-	dma_set 4, DMAP_1REG_2WR, M7D_VALS, M7D
+	dma_set 1, M7A, DMAP_1REG_2WR, M7A_VALS
+	dma_set 2, M7B, DMAP_1REG_2WR, M7B_VALS
+	dma_set 3, M7C, DMAP_1REG_2WR, M7C_VALS
+	dma_set 4, M7D, DMAP_1REG_2WR, M7D_VALS
 
 .endproc
 
 .proc run
-	lda #%00011110
-	sta HDMAEN
+	lda m_hdmaen
+	ora #%00011110
+	sta m_hdmaen
 	rts
 .endproc
 

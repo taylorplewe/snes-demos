@@ -13,10 +13,13 @@ local:			.res 16
 oam_lo_ind:		.res 1
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
+
+m_hdmaen:		.res 1
 	
 	.code
 	.include "src/common.s"
 	.include "src/init.s"
+	.include "src/fog.s"
 	.include "src/hdma.s"
 	.include "src/irq.s"
 	
@@ -51,6 +54,7 @@ reset:
 	jsr init_ppu
 	jsr hdma::init
 	jsr irqs::init
+	jsr fog::init
 
 	; turn screen back on & set brightness
 	lda #$f
@@ -85,7 +89,7 @@ nmi:
 	;oam(sprites)
 	ldx #0
 	stx OAMADDL
-	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	dma 0, OAMDATA, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAM_NUM_BYTES
 
 	lda hdma::hmda_ready
 	beq :+
@@ -93,8 +97,13 @@ nmi:
 		jsr hdma::do_m7
 	:
 
+	jsr fog::vblank
+
 	lda #BGMODE_MODE1
 	sta BGMODE
+
+	lda m_hdmaen
+	sta HDMAEN
 
 	ply
 	plx

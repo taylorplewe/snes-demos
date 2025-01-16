@@ -5,7 +5,7 @@
 .code
 
 .proc init
-	ldx #210
+	ldx #185
 	stx HTIMEL
 	ldx #112
 	stx VTIMEL
@@ -44,6 +44,8 @@ irq:
 	; irq code
 	ldx #0
 	jsr (irqs::irq_routine_addr, x)
+	
+	jsr fog::irq
 
 	lda TIMEUP ; clear IRQ read thing
 
