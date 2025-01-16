@@ -16,7 +16,7 @@ A little harder to wrap your head around, but in simple terms, it tells the SNES
 
 ### 
 
-## Blend with a fixed color
+## Blend the Main screen with a fixed color
 ### Fade
 ![fade](captures/fade.gif)
 
