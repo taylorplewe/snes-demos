@@ -21,8 +21,6 @@ b_fog_vals: .incbin "../bin/b_fog_vals.bin"
 .endproc
 
 .proc vblank
-	lda #CGADSUB_BG1 | CGADSUB_BACKDROP | CGADSUB_ADD
-	sta CGADSUB
 	lda #CGWSEL_FIXED_COLOR | CGWSEL_PREVENT_ALWAYS
 	sta CGWSEL
 	rts
