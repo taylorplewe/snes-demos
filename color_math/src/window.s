@@ -22,9 +22,8 @@ bg_y:	.res 1
 	; ; set up hdma
 	dma_set 4, WH2, DMAP_1REG_1WR, WH2_HDMA_TABLE_ADDR
 	dma_set 5, WH3, DMAP_1REG_1WR, WH3_HDMA_TABLE_ADDR
-	lda m_hdmaen
-	ora #%110000
-	sta m_hdmaen
+	lda #%110000
+	tsb m_hdmaen
 	rts
 .endproc
 

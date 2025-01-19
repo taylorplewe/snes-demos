@@ -88,14 +88,12 @@ b_hdma_table: .incbin "../bin/b_hdma_vals.bin"
 		dma_set 1, COLDATA, DMAP_1REG_1WR, r_hdma_table
 		dma_set 2, COLDATA, DMAP_1REG_1WR, g_hdma_table
 		dma_set 3, COLDATA, DMAP_1REG_1WR, b_hdma_table
-		lda m_hdmaen
-		ora #%1110
-		sta m_hdmaen
+		lda #%1110
+		tsb m_hdmaen
 		rts
 	fade:
-		lda m_hdmaen
-		and #%11110001
-		sta m_hdmaen
+		lda #%1110
+		trb m_hdmaen
 		lda counter
 		lsr a
 		lsr a

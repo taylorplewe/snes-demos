@@ -14,9 +14,8 @@ b_fog_vals: .incbin "../bin/b_fog_vals.bin"
 	dma_set 6, COLDATA, DMAP_1REG_1WR, g_fog_vals
 	dma_set 7, COLDATA, DMAP_1REG_1WR, b_fog_vals
 
-	lda m_hdmaen
-	ora #%11100000
-	sta m_hdmaen
+	lda #%11100000
+	tsb m_hdmaen
 	rts
 .endproc
 
