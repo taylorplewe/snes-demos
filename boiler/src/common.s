@@ -46,26 +46,6 @@ set_joy1_pressed:
 	a8
 	rts
 
-clear_oam:
-	ldx #0
-	stz oam_lo_ind
-	lda #@oam_mush_lo
-	@loloop:
-		sta OAM_DMA_ADDR_LO, x
-		inx
-		cpx #512
-		bcc @loloop
-	ldx #0
-	lda #@oam_mush_hi
-	@hiloop:
-		sta OAM_DMA_ADDR_HI, x
-		inx
-		cpx #32
-		bcc @hiloop
-	rts
-	@oam_mush_lo = 224
-	@oam_mush_hi = $ff
-
 ; params:
 ;	x - oam_lo_ind
 ;	a - bits to set (will be masked off for correct sprite, e.g. send over %10101010 and it will be masked off to only update %--10----)
