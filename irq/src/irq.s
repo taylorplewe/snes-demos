@@ -16,7 +16,8 @@
 
 .rodata
 	sky_grad: .incbin "../bin/sky_grad.bin"
-	sky_grad_len = *-sky_grad
+	dusk_grad: .incbin "../bin/dusk_grad.bin"
+
 .code
 irq:
 	php
@@ -41,7 +42,7 @@ irq:
 	lda scanline
 	asl a
 	tax
-	lda sky_grad, x
+	lda dusk_grad, x
 	a8
 	sta CGDATA
 	xba

@@ -30,8 +30,9 @@
 		ldy #count
 		jsr dma_ch0
 	.endmacro
+	.a16
 	.macro m7 m7a, m7b, m7c, m7d
-		lda m7a
+		lda m7a	
 		pha
 		lda m7b
 		pha
@@ -40,10 +41,9 @@
 		lda m7d
 		pha
 		jsr _m7
-		tsx
-		txa
+		tsc
 		clc
 		adc #8
-		tax
-		txs
+		tcs
 	.endmacro
+	.a8
