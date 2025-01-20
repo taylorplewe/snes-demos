@@ -1,22 +1,7 @@
 .scope str
 	NEWLINE = '['
-	DemoMode: .byte "(Y) Demo mode: ", 0
-	ClipColors: .byte "(B) Clip colors: ", 0
-	PreventMath: .byte "(X) Prevent math: ", 0
-	BlendMode: .byte "(A) Blend mode: ", 0
 
-	Fade: .byte "fade[", 0
-	Gradient: .byte "gradient[", 0
-	Subscreen: .byte "subscreen[", 0
-
-	Always: .byte "always[", 0
-	Never: .byte "never[", 0
-	InsideWindow: .byte "inside window[", 0
-	OutsideWindow: .byte "outside window[", 0
-
-	Add: .byte "add[", 0
-	Subtract: .byte "subtract[", 0
-	AddThenHalf: .byte "add then half[", 0
+	SoundDemo: .byte "Sound demo[", 0
 .endscope
 
 .scope debug
@@ -49,7 +34,7 @@ BOTTOM_LEFT_TILE_ADDR = $6c0
 	sta CGADD
 	dma 0, CGDATA, DMAP_1REG_2WR, font_pals, font_pals_len
 
-	; load font CHR
+	; load debug font CHR
 	ldx #$3000
 	stx VMADDL
 	dma 0, VMDATAL, DMAP_2REG_1WR, font_bin, font_bin_len
@@ -61,6 +46,12 @@ BOTTOM_LEFT_TILE_ADDR = $6c0
 	; tell BG3 where the tilemap is
 	lda #$18
 	sta BG3SC
+
+	; scroll
+	lda #<-1
+	sta BG3HOFS
+	lda #>-1
+	sta BG3HOFS
 
 	; clear screen
 	jsr clear_buffer
@@ -81,7 +72,7 @@ BOTTOM_LEFT_TILE_ADDR = $6c0
 	ldx #SCREEN_BUFF
 	stx WMADDL
 	stz WMADDH
-	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 32*28*2
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 32*32*2
 	rts
 .endproc
 
@@ -91,7 +82,7 @@ BOTTOM_LEFT_TILE_ADDR = $6c0
 .proc write_buffer_to_vram
 	ldx #$1800
 	stx VMADDL
-	dma 0, VMDATAL, DMAP_2REG_1WR, SCREEN_BUFF, 32*28*2
+	dma 0, VMDATAL, DMAP_2REG_1WR, SCREEN_BUFF, 32*32*2
 	rts
 .endproc
 

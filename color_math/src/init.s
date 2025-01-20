@@ -52,13 +52,10 @@ init_ppu:
 		sta BG1SC
 		lda #$14
 		sta BG2SC
-		; lda #$24
-		; sta BG3SC
 
 		; where are the bg tiles in vram?
 		lda #$24 ; $2000 for bg2, $4000 for bg1
 		sta BG12NBA
-		; stz BG34NBA
 
 		; scroll
 		stz BG1HOFS
