@@ -259,7 +259,7 @@ CLRRegLoop:
 ;   BNE CLRRegLoopC
   RTS
 
-	.include "../registers.inc"
+	.include "../snes.inc"
 
 	.segment "BANK1"
 chr:
