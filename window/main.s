@@ -35,8 +35,6 @@ reset:
 	ldx #$1fff
 	txs ; stack now starts at $1fff
 
-	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
-	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
 	; turn off screen for PPU writes
 	lda #INIDISP_BLANK
@@ -44,6 +42,9 @@ reset:
 
 	jsr init_ppu
 	jsr window::init
+	
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
+	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
 	; turn screen back on & set brightness
 	lda #$f

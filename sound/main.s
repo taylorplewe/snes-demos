@@ -8,6 +8,7 @@ joy1_pressed:	.res 2
 	
 	.code
 	.include "src/common.s"
+	.include "sound/sound.s"
 	.include "src/ppu.s"
 	.include "src/debug.s"
 zero: .word 0
@@ -32,13 +33,24 @@ reset:
 	ldx #$1fff
 	txs
 
-	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
-	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
-
 	; all init code
 	jsr ppu::init
 	jsr debug::init
-	jsr sound::init
+	a16
+	lda #.loword(spc700)
+	ldx #^spc700
+	jsl SPC_Init
+
+	lda #1
+	jsl SPC_Stereo
+
+	lda #.loword(jeux)
+	ldx #^jeux
+	jsl SPC_Play_Song
+	a8
+
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
+	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
 	; turn screen back on & set brightness
 	lda #$f
@@ -50,7 +62,6 @@ forever:
 
 	; all update code
 	jsr debug::update
-	jsr sound::update
 
 	ldx #str::SoundDemo
 	lda #debug::FontColor::Green
@@ -67,10 +78,12 @@ nmi:
 	phx
 	phy
 
+	a8
+	i16
+
 	; all vblank code
 	jsr ppu::vblank
 	jsr debug::vblank
-	jsr sound::vblank
 
 	ply
 	plx

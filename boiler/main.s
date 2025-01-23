@@ -31,11 +31,11 @@ reset:
 	ldx #$1fff
 	txs
 
-	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
-	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
-
 	; all init code
 	jsr ppu::init
+	
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
+	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
 	; turn screen back on & set brightness
 	lda #$f
@@ -57,6 +57,9 @@ nmi:
 	pha
 	phx
 	phy
+
+	a8
+	i16
 
 	; all vblank code
 	jsr ppu::vblank
