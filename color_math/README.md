@@ -12,7 +12,7 @@ Uses what I learned in the `window` demo to prevent color math (in this case, ma
 ![prevent math](captures/subscreen_preventmath.gif)
 
 ### Clip colors
-"Clip colors to black before color math." That is, disregard the colors of the Main background.  In essence,  this tells the SNES to _only display the subscreen_ in some areas.
+"Clip colors to black before color math." That is, disregard the colors of the Main screen.  In essence,  this tells the SNES to _only display the Sub screen_ in some areas.
 ![clip colors](captures/subscreen_clipcolors.gif)
 
 ### 
