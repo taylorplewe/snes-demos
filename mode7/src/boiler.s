@@ -7,7 +7,7 @@
 	.include "../../registers.s"
 
 	.segment "HEADER"
-		.byte "MODE7 TEST"
+		.byte "MODE 7 TEST          "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever

@@ -17,7 +17,7 @@
 	.endmacro
 
 	.segment "HEADER"
-		.byte "TAYLORS TEST"
+		.byte "ORCA                 "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever

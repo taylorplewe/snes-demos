@@ -7,7 +7,7 @@
 	.include "../../registers.s"
 
 	.segment "HEADER"
-		.byte "SNES BOILER"
+		.byte "SCROLLING BG TEST   "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever
