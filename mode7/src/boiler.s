@@ -4,7 +4,7 @@
 	.smart +	; try to automatically tell when I switch registers between 8- and 16-bit
 	
 	.include "macros.s"
-	.include "../../registers.s"
+	.include "../../snes.inc"
 
 	.segment "HEADER"
 		.byte "MODE 7 TEST          "

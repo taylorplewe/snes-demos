@@ -381,7 +381,7 @@ readp1:
 	@end: rts
 ;
 
-	.include "../registers.s"
+	.include "../snes.inc"
 	orcachr: .incbin "bin/orca.bin"
 orcachrend:
 

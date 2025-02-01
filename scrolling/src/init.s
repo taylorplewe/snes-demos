@@ -3,6 +3,90 @@ pals:
 TOTAL_NUM_PAL_BYTES = *-pals
 
 init_ppu:
+	; official SNES dev manual's recommended startup registers
+	; I know this is less efficient than zeroing with a 16-bit accumulator, but this is far more readable and gives me peace of mind
+	ldx #0
+	lda #INIDISP_BLANK | $ff
+	sta INIDISP
+	stz OBSEL
+	stx OAMADDL
+	stz BGMODE
+	stz MOSAIC
+	stz BG1SC
+	stz BG2SC
+	stz BG3SC
+	stz BG4SC
+	stz BG12NBA
+	stz BG34NBA
+	stz BG1HOFS ; ww
+	stz BG1HOFS
+	stz BG2HOFS ; ww
+	stz BG2HOFS
+	stz BG3HOFS ; ww
+	stz BG3HOFS
+	stz BG4HOFS ; ww
+	stz BG4HOFS
+	stz BG1VOFS ; ww
+	stz BG1VOFS
+	stz BG2VOFS ; ww
+	stz BG2VOFS
+	stz BG3VOFS ; ww
+	stz BG3VOFS
+	stz BG4VOFS ; ww
+	stz BG4VOFS
+	lda #VMAIN_WORDINC
+	sta VMAIN
+	stx VMADDL
+	stz M7SEL
+	lda #<$0100
+	sta M7A ; ww
+	lda #>$0100
+	sta M7A
+	stz M7B ; ww
+	stz M7B
+	stz M7C ; ww
+	stz M7C
+	lda #<$0100
+	sta M7D ; ww
+	lda #>$0100
+	sta M7D
+	stz M7X ; ww
+	stz M7X
+	stz M7Y ; ww
+	stz M7Y
+	stz CGADD
+	stz W12SEL
+	stz W34SEL
+	stz WOBJSEL
+	stz WH0
+	stz WH1
+	stz WH2
+	stz WH3
+	stz WBGLOG
+	stz WOBJLOG
+	stz TM
+	stz TS
+	stz TMW
+	stz TSW
+	lda #CGWSEL_PREVENT_ALWAYS
+	sta CGWSEL
+	stz CGADSUB
+	lda #COLDATA_R | COLDATA_G | COLDATA_B | $00
+	sta COLDATA
+	stz SETINI
+	stz NMITIMEN
+	lda #$ff
+	sta WRIO
+	stz WRMPYA
+	stz WRMPYB
+	stx WRDIVL
+	stz WRDIVB
+	stx HTIMEL
+	stx VTIMEL
+	stz MDMAEN
+	stz HDMAEN
+	stz MEMSEL
+
 	; palettes
 	stz CGADD
 	dma_ch0 #DMAP_1REG_2WR, pals, CGDATA, #TOTAL_NUM_PAL_BYTES

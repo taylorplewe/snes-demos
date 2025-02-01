@@ -52,10 +52,6 @@ reset:
 		bpl @clearallram
 	stx $40
 
-	; turn off screen for PPU writes
-	lda #INIDISP_BLANK
-	sta INIDISP
-
 	jsr init_ppu
 	jsr draw::Init
 
