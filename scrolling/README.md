@@ -3,4 +3,4 @@ Quickly writing a buffer of new tiles to VRAM during V-blank to achieve scrollin
 ![scrolling](scrolling.gif)
 
 Running on real hardware:
-<video controls><source src="https://tplewe.com/files/scrolling-demo-real-hardware.mp4" type="video/mp4"></source></video>
+<video controls><source src="https://tplewe.com/files/scrolling-demo-real-hardware.mp4" type="video/mp4" /></video>
