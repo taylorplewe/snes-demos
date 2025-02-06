@@ -247,8 +247,13 @@ move_circle2:
 	bra @lr
 	@u:
 		a8
-		dec circle2_y+1
-		dec circle2_y+1
+		lda circle2_y+1
+		sec
+		sbc #2
+		bcs :+
+			lda #0
+		:
+		sta circle2_y+1
 		bra @lr
 	@d:
 		a8
