@@ -276,23 +276,23 @@ move_circle2:
 	rts
 	@l:
 		a8
-		lda circle_x+1
+		lda circle2_x+1
 		sec
 		sbc #2
 		bcs :+
 			lda #0
 		:
-		sta circle_x+1
+		sta circle2_x+1
 		rts
 	@r:
 		a8
-		lda circle_x+1
+		lda circle2_x+1
 		clc
 		adc #2
 		bcc :+
 			lda #255
 		:
-		sta circle_x+1
+		sta circle2_x+1
 		rts
 ;
 
