@@ -104,6 +104,11 @@ reset:
 	lda #INIDISP_BLANK | $f
 	sta INIDISP
 	; set first color (bg color?)
+	stz CGADD
+	lda #<%0100001000010000
+	sta CGDATA
+	lda #>%0100001000010000
+	sta CGDATA
 	lda #128
 	sta CGADD
 
