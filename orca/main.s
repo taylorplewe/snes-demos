@@ -198,6 +198,10 @@ updateorca:
 		a8
 		inc orcaframectr
 		stz orcafacingl
+		lda orcax
+		clc
+		adc #32
+		bcs :+
 		inc orcax
 		bra :+
 	@l:
@@ -205,6 +209,8 @@ updateorca:
 		inc orcaframectr
 		lda #SPRINFO_HFLIP
 		sta orcafacingl
+		lda orcax
+		beq :+
 		dec orcax
 	:
 	a16
