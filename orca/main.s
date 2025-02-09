@@ -203,6 +203,13 @@ updateorca:
 		adc #32
 		bcs :+
 		inc orcax
+		a16
+		lda JOY1L
+		bit #JOY_Y
+		beq :+
+		a8
+		inc orcaframectr
+		inc orcax
 		bra :+
 	@l:
 		a8
@@ -211,6 +218,13 @@ updateorca:
 		sta orcafacingl
 		lda orcax
 		beq :+
+		dec orcax
+		a16
+		lda JOY1L
+		bit #JOY_Y
+		beq :+
+		a8
+		inc orcaframectr
 		dec orcax
 	:
 	a16
