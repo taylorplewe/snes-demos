@@ -198,10 +198,6 @@ updateorca:
 		a8
 		inc orcaframectr
 		stz orcafacingl
-		lda orcax
-		clc
-		adc #32
-		bcs :+
 		inc orcax
 		a16
 		lda JOY1L
@@ -216,8 +212,6 @@ updateorca:
 		inc orcaframectr
 		lda #SPRINFO_HFLIP
 		sta orcafacingl
-		lda orcax
-		beq :+
 		dec orcax
 		a16
 		lda JOY1L
@@ -226,6 +220,19 @@ updateorca:
 		a8
 		inc orcaframectr
 		dec orcax
+	:
+	a8
+	lda orcax
+	cmp #256-32
+	bcc :+++
+		cmp #256-16
+		bcs :+
+			lda #256-32
+			bra :++
+		:
+			lda #0
+		:
+		sta orcax
 	:
 	a16
 	; make sure framectr is 0 when not moving
