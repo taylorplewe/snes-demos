@@ -73,6 +73,23 @@
 		lda #1 << chan
 		sta HDMAEN ; run it
 	.endmacro
+	
+	; oam (sprites)
+	.macro oam_buff_obj _x, _y, info, tile, hi
+		lda _x
+		sta OAM_X, x
+		lda _y
+		sta OAM_Y, x
+		lda info
+		sta OAM_INFO, x
+		lda tile
+		sta OAM_TILE, x
+		lda hi
+		jsr set_oam_hi_bits
+		.repeat 4
+		inx
+		.endrepeat
+	.endmacro
 
 	; mode 7
 	.a16

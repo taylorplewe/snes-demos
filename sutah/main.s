@@ -22,6 +22,7 @@ m_hdmaen:		.res 1
 	.include "src/fog.s"
 	.include "src/hdma.s"
 	.include "src/irq.s"
+	.include "src/plr.s"
 	
 reset:
 	clc
@@ -40,13 +41,6 @@ reset:
 	dex
 	txs ; stack now starts at $1fff
 
-	lda #NMITIMEN_NMIENABLE | NMITIMEN_IRQENABLE_X | NMITIMEN_IRQENABLE_Y | NMITIMEN_AUTOJOY
-	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
-
-	; EXT BG Mode 7
-	lda #SETINI_M7EXTBG
-	sta SETINI
-
 	; turn off screen for PPU writes
 	lda #INIDISP_BLANK
 	sta INIDISP
@@ -56,16 +50,22 @@ reset:
 	jsr irqs::init
 	jsr fog::init
 
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_IRQENABLE_X | NMITIMEN_IRQENABLE_Y | NMITIMEN_AUTOJOY
+	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
+
 	; turn screen back on & set brightness
 	lda #$f
 	sta INIDISP
 
 forever:
 	jsr wait_for_input
+	jsr set_joy1_pressed
 	jsr hdma::update
 	jsr irqs::update
 
 	jsr clear_oam
+
+	jsr plr::update
 
 	; end of frame
 	a16
@@ -97,6 +97,7 @@ nmi:
 		jsr hdma::do_m7
 	:
 
+	jsr plr::vblank
 	jsr fog::vblank
 
 	lda #BGMODE_MODE1
@@ -104,6 +105,7 @@ nmi:
 
 	lda m_hdmaen
 	sta HDMAEN
+
 
 	ply
 	plx

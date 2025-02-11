@@ -111,6 +111,7 @@ set_oam_hi_bits:
 	@new_hi_bits		= local
 	@oam_hi_ind			= local+1
 	@oam_hi_mask		= local+2
+	phx
 	pha
 	a16
 	txa
@@ -146,6 +147,7 @@ set_oam_hi_bits:
 	ora @new_hi_bits
 	sta OAM_DMA_ADDR_HI, x
 	i16
+	plx
 	rts
 
 

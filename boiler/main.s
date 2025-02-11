@@ -1,13 +1,5 @@
 	.include "src/boiler.s"
 
-OAM_DMA_ADDR_LO	= $1d00 ; 2 whole pages of low table OAM, 32 bytes of high table shared with stack page ($1f--)
-OAM_DMA_ADDR_HI	= OAM_DMA_ADDR_LO + 512
-OAM_NUM_BYTES	= 544
-OAM_X			= OAM_DMA_ADDR_LO
-OAM_Y			= OAM_DMA_ADDR_LO + 1
-OAM_TILE		= OAM_DMA_ADDR_LO + 2
-OAM_INFO		= OAM_DMA_ADDR_LO + 3
-
 	.zeropage
 local:			.res 16
 oam_lo_ind:		.res 1
@@ -15,47 +7,49 @@ joy1_prev:		.res 2
 joy1_pressed:	.res 2
 	
 	.code
+	.include "src/common.s"
+	.include "src/ppu.s"
+zero: .word 0
 reset:
-	; go into native mode lets gooooo
+	; go into native mode
 	clc
-	xce ; Now you're playing with ~power~
+	xce
 	i16
 	a8
 
-	; clear all RAM
-	ldx #0
-	@clearallram:
-		stz 0, x
-		inx
-		cpx #$2000
-		bcc @clearallram
-
-	dex
-	txs ; stack now starts at $1fff
-
-	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
-	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
-
-	; turn off screen for PPU writes
+	; turn off screen for init code
 	lda #INIDISP_BLANK
 	sta INIDISP
 
-	jsr init_ppu
+	; clear all RAM
+	stz WMADDL
+	stz WMADDM
+	stz WMADDH
+	dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, 0 ; 0 = 64k because it dec's then checks
+	sta MDMAEN ; fire again for next 64k ($1000-$1fff)
+
+	ldx #$1fff
+	txs
+
+	; all init code
+	jsr ppu::init
+	
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
+	sta NMITIMEN ; interrupt enable register; enable NMIs and auto joypad read
 
 	; turn screen back on & set brightness
 	lda #$f
 	sta INIDISP
 
 forever:
+	jsr ppu::update
 	jsr wait_for_input
 
-	jsr clear_oam
+	; all update code
 
 	; end of frame
-	a16
-	lda JOY1L
-	sta joy1_prev
-	a8
+	ldx JOY1L
+	stx joy1_prev
 	wai
 	bra forever
 
@@ -64,20 +58,13 @@ nmi:
 	phx
 	phy
 
-	;oam(sprites)
-	ldx #0
-	stx OAMADDL
-	dma 0, DMAP_1REG_1WR, OAM_DMA_ADDR_LO, OAMDATA, OAM_NUM_BYTES
+	a8
+	i16
+
+	; all vblank code
+	jsr ppu::vblank
 
 	ply
 	plx
 	pla
 	rti
-
-
-	.include "src/common.s"
-	.include "src/init.s"
-
-chr:
-	.incbin "bin/chr.bin"
-CHR_LEN = *-chr

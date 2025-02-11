@@ -38,7 +38,7 @@ screen_buff_addr: .res 2
 font_bin: .incbin "../../debug_font.bin"
 font_bin_len = * - font_bin
 
-font_pals: .incbin "../bin/debug_font_pals.bin"
+font_pals: .incbin "../../debug_font_pals.bin"
 font_pals_len = * - font_pals
 
 BOTTOM_LEFT_TILE_ADDR = $6c0
