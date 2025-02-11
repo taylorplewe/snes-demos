@@ -145,6 +145,8 @@ dma_vblank_addr:   .res 2
 	beq end
 		a16
 		lda JOY1L
+		bit #JOY_SHOULDER_R
+		bne :++
 		bit #JOY_L
 		bne :+
 		bit #JOY_SHOULDER_L

@@ -170,15 +170,15 @@ persp112_8_len = *-persp112_8
 		jsr move
 	:
 	lda JOY1L
-	bit #JOY_SHOULDER_L
-	beq :+
-		ldy #Dir::StrafeLeft
-		jsr move
-		bra :++
-	:
 	bit #JOY_SHOULDER_R
 	beq :+
 		ldy #Dir::StrafeRight
+		jsr move
+		bra :++
+	:
+	bit #JOY_SHOULDER_L
+	beq :+
+		ldy #Dir::StrafeLeft
 		jsr move
 	:
 	a8
