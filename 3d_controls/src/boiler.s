@@ -7,7 +7,7 @@
 	.include "../../snes.inc"
 
 	.segment "HEADER"
-		.byte "3D CONTROLS"
+		.byte "3D CONTROLS         "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever

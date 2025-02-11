@@ -17,7 +17,7 @@
 	.endmacro
 
 	.segment "HEADER"
-		.byte "TAYLORS TEST"
+		.byte "ORCA                 "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever
@@ -104,6 +104,11 @@ reset:
 	lda #INIDISP_BLANK | $f
 	sta INIDISP
 	; set first color (bg color?)
+	stz CGADD
+	lda #<%0100001000010000
+	sta CGDATA
+	lda #>%0100001000010000
+	sta CGDATA
 	lda #128
 	sta CGADD
 
@@ -194,6 +199,13 @@ updateorca:
 		inc orcaframectr
 		stz orcafacingl
 		inc orcax
+		a16
+		lda JOY1L
+		bit #JOY_Y
+		beq :+
+		a8
+		inc orcaframectr
+		inc orcax
 		bra :+
 	@l:
 		a8
@@ -201,6 +213,26 @@ updateorca:
 		lda #SPRINFO_HFLIP
 		sta orcafacingl
 		dec orcax
+		a16
+		lda JOY1L
+		bit #JOY_Y
+		beq :+
+		a8
+		inc orcaframectr
+		dec orcax
+	:
+	a8
+	lda orcax
+	cmp #256-32
+	bcc :+++
+		cmp #256-16
+		bcs :+
+			lda #256-32
+			bra :++
+		:
+			lda #0
+		:
+		sta orcax
 	:
 	a16
 	; make sure framectr is 0 when not moving
