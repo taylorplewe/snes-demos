@@ -29,6 +29,7 @@ OBSEL			= $2101 ; Object Size and Character Size Register
 ;        111 = 16x32 and 32x32 sprites ('undocumented')
 ;     nn     = Name Select
 ;       bbb  = Name Base Select (Addr>>14)
+	.define OBSEL_BASE(base) base >> 1
 	OBSEL_8x8_16x16   = %00000000
 	OBSEL_8x8_32x32   = %00100000
 	OBSEL_8x8_64x64   = %01000000
