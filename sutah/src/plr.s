@@ -281,7 +281,7 @@ draw_info: .res 1
 	clc
 	adc z_pos+1
 	sta draw_y
-	ldx #0
+	ldx oam_lo_ind
 	oam_buff_obj #PLR_X,    draw_y, draw_info, #0,   #SPR_HI_LARGE
 	lda draw_y
 	clc
@@ -298,7 +298,39 @@ draw_info: .res 1
 		oam_buff_obj #PLR_X+16, draw_y, draw_info, #$04, #0
 	end:
 	stx oam_lo_ind
-	rts
+.endmacro
+
+	.zeropage
+shadow_tile: .res 1
+	.code
+.macro draw_shadow
+.scope
+	lda z_pos+1
+	beq _40
+	cmp #<-35
+	bcs _40
+	cmp #<-60
+	bcs _44
+	cmp #<-75
+	bcs _48
+	; _4c:
+		lda #$4c
+		bra store_tile
+	_48:
+		lda #$48
+		bra store_tile
+	_44:
+		lda #$44
+		bra store_tile
+	_40:
+		lda #$40
+	store_tile:
+	sta shadow_tile
+
+	ldx oam_lo_ind
+	oam_buff_obj #PLR_X, #PLR_Y+42, #SPRINFO_PRIOR3 | SPRINFO_PAL(1), shadow_tile, #SPR_HI_LARGE
+	stx oam_lo_ind
+.endscope
 .endmacro
 
 .proc update
@@ -308,6 +340,7 @@ draw_info: .res 1
 	update_anim
 	prepare_dma
 	draw
+	draw_shadow
 	rts
 .endproc
 

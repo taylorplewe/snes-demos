@@ -4,6 +4,9 @@ pals_len = *-pals
 sonic_pals: .incbin "../bin/sonic_pal.bin"
 sonic_pals_len = *-sonic_pals
 
+shadow_chr: .incbin "../bin/shadow.chr"
+shadow_chr_len = *-shadow_chr
+
 sky_chr:
 	.repeat 8
 		.byte $ff
@@ -28,6 +31,10 @@ init_ppu:
 	lda #128
 	sta CGADD
 	dma 0, CGDATA, DMAP_1REG_2WR, sonic_pals, sonic_pals_len
+
+	lda #128+16
+	sta CGADD
+	dma 0, CGDATA, DMAP_1REG_2WR, pals, pals_len
 	
 	lda #VMAIN_WORDINC
 	sta VMAIN
@@ -48,6 +55,12 @@ init_ppu:
 	lda #$78
 	sta VMADDH
 	dma 0, VMDATAL, DMAP_2REG_1WR, sky_map, sky_map_len
+
+	; shadow chr
+	stz VMADDL
+	lda #$64
+	sta VMADDH
+	dma 0, VMDATAL, DMAP_2REG_1WR, shadow_chr, shadow_chr_len
 
 	; where is the bg tilemap in vram?
 	lda #$78 ; $7800

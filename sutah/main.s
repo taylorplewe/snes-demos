@@ -10,7 +10,7 @@ OAM_INFO		= OAM_DMA_ADDR_LO + 3
 
 	.zeropage
 local:			.res 16
-oam_lo_ind:		.res 1
+oam_lo_ind:		.res 2
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
 
