@@ -314,21 +314,22 @@ shadow_tile: .res 1
 	cmp #<-75
 	bcs _48
 	; _4c:
-		lda #$4c
+		lda #$0e
 		bra store_tile
 	_48:
-		lda #$48
+		lda #$0c
 		bra store_tile
 	_44:
-		lda #$44
+		lda #$0a
 		bra store_tile
 	_40:
-		lda #$40
+		lda #$08
 	store_tile:
 	sta shadow_tile
 
 	ldx oam_lo_ind
-	oam_buff_obj #PLR_X, #PLR_Y+42, #SPRINFO_PRIOR3 | SPRINFO_PAL(1), shadow_tile, #SPR_HI_LARGE
+	oam_buff_obj #PLR_X, #PLR_Y+42, #SPRINFO_PRIOR3 | SPRINFO_PAL(1), shadow_tile, #0
+	oam_buff_obj #PLR_X+16, #PLR_Y+42, #SPRINFO_PRIOR3 | SPRINFO_HFLIP | SPRINFO_PAL(1), shadow_tile, #0
 	stx oam_lo_ind
 .endscope
 .endmacro
@@ -354,7 +355,7 @@ shadow_tile: .res 1
 	stz A1B0
 	stz VMADDL
 
-	lda #$60
+	lda #$40
 	sta VMADDH
 	ldx dma_vblank_addr
 	phx
@@ -371,7 +372,7 @@ shadow_tile: .res 1
 	stx DAS0L
 	stz A1B0
 	stz VMADDL
-	lda #$61
+	lda #$41
 	sta VMADDH
 	a16
 	pla
@@ -391,7 +392,7 @@ shadow_tile: .res 1
 	stx DAS0L
 	stz A1B0
 	stz VMADDL
-	lda #$62
+	lda #$42
 	sta VMADDH
 	a16
 	pla
@@ -411,7 +412,7 @@ shadow_tile: .res 1
 	stx DAS0L
 	stz A1B0
 	stz VMADDL
-	lda #$63
+	lda #$43
 	sta VMADDH
 	a16
 	pla

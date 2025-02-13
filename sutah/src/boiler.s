@@ -7,7 +7,7 @@
 	.include "../../snes.inc"
 
 	.segment "HEADER"
-		.byte "SONIC SOUTHERN UTAH"
+		.byte "SONIC SOUTHERN UTAH  "
 	.segment "ROMINFO"
 		.byte %00110000	; FastROM
 		.byte 0			; no battery or expansion chips or whatever
