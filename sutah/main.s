@@ -114,5 +114,5 @@ nmi:
 
 	.segment "BANK1"
 chr:
-	.incbin "bin/sand_chr.bin"
+	.incbin "bin/sand_chr2.bin"
 CHR_LEN = *-chr
