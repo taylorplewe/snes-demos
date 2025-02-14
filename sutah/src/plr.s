@@ -181,6 +181,7 @@ dma_vblank_addr:   .res 2
 			stz should_flip_frame
 			stz going_backwards
 			stz facing_l
+			stz frame
 			lda #.loword(JUMP_VSPEED)
 			sta vspeed
 			ldx #Frames::Jump
