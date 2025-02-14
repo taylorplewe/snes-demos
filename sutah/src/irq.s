@@ -21,6 +21,12 @@
 .endproc
 
 .proc change_to_mode_7
+	lda hdma::x_pos+1
+	sta BG1HOFS
+	stz BG1HOFS
+	lda hdma::y_pos+1
+	sta BG1VOFS
+	stz BG1VOFS
 	lda #BGMODE_MODE7
 	sta BGMODE
 	rts

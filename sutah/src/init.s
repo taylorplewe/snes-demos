@@ -31,6 +31,11 @@ sky_map:
 	.endrepeat
 sky_map_len = * - sky_map
 
+redrock_map1: .include "red-rock1.s"
+redrock_map1_len = *-redrock_map1
+redrock_map2: .include "red-rock2.s"
+redrock_map2_len = *-redrock_map2
+
 init_ppu:
 	; palettes
 	stz CGADD
@@ -68,11 +73,21 @@ init_ppu:
 	sta VMADDH
 	dma 0, VMDATAL, DMAP_2REG_1WR, sky_map, sky_map_len
 
+	stz VMADDL
+	lda #$44
+	sta VMADDH
+	dma 0, VMDATAL, DMAP_2REG_1WR, redrock_map1, redrock_map1_len
+
 	; sky map bg2
 	stz VMADDL
 	lda #$48
 	sta VMADDH
 	dma 0, VMDATAL, DMAP_2REG_1WR, sky_map, sky_map_len
+	
+	stz VMADDL
+	lda #$48
+	sta VMADDH
+	dma 0, VMDATAL, DMAP_2REG_1WR, redrock_map2, redrock_map2_len
 
 	; shadow chr
 	stz VMADDL

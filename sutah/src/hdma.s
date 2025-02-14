@@ -144,6 +144,10 @@ persp112_8_len = *-persp112_8
 		ldy #3
 		jsr move
 		a16
+		lda mode1_hscroll+1
+		sec
+		sbc #8
+		sta mode1_hscroll+1
 	:
 	lda JOY1L
 	bit #JOY_R
@@ -154,6 +158,10 @@ persp112_8_len = *-persp112_8
 		ldy #2
 		jsr move
 		a16
+		lda mode1_hscroll+1
+		clc
+		adc #8
+		sta mode1_hscroll+1
 	:
 
 	; move
@@ -174,12 +182,22 @@ persp112_8_len = *-persp112_8
 	beq :+
 		ldy #Dir::StrafeRight
 		jsr move
+		a16
+		lda mode1_hscroll
+		clc
+		adc #$20
+		sta mode1_hscroll
 		bra :++
 	:
 	bit #JOY_SHOULDER_L
 	beq :+
 		ldy #Dir::StrafeLeft
 		jsr move
+		a16
+		lda mode1_hscroll
+		sec
+		sbc #$20
+		sta mode1_hscroll
 	:
 	a8
 	rts
@@ -294,12 +312,6 @@ persp112_8_len = *-persp112_8
 .endproc
 
 .proc do_m7
-	lda x_pos+1
-	sta BG1HOFS
-	stz BG1HOFS
-	lda y_pos+1
-	sta BG1VOFS
-	stz BG1VOFS
 	lda #0
 	xba
 	lda x_pos+1

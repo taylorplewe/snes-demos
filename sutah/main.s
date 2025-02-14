@@ -14,6 +14,8 @@ oam_lo_ind:		.res 2
 joy1_prev:		.res 2
 joy1_pressed:	.res 2
 
+mode1_hscroll:	.res 3
+
 m_hdmaen:		.res 1
 	
 	.code
@@ -102,6 +104,14 @@ nmi:
 
 	lda #BGMODE_MODE1
 	sta BGMODE
+
+	lda mode1_hscroll+1
+	sta BG1HOFS
+	lda mode1_hscroll+2
+	sta BG1HOFS
+	lda #<-(112-31)
+	sta BG1VOFS
+	stz BG1VOFS
 
 	lda m_hdmaen
 	sta HDMAEN
