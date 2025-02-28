@@ -116,7 +116,6 @@ nmi:
 	lda m_hdmaen
 	sta HDMAEN
 
-
 	ply
 	plx
 	pla

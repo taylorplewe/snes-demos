@@ -7,7 +7,7 @@ b_fog_vals: .incbin "../bin/b_fog_vals.bin"
 .proc init
 	lda #CGADSUB_BG1 | CGADSUB_BACKDROP | CGADSUB_ADD
 	sta CGADSUB
-	lda #CGWSEL_FIXED_COLOR | CGWSEL_PREVENT_ALWAYS
+	lda #CGWSEL_FIXED_COLOR
 	sta CGWSEL
 
 	dma_set 5, COLDATA, DMAP_1REG_1WR, r_fog_vals
@@ -20,15 +20,16 @@ b_fog_vals: .incbin "../bin/b_fog_vals.bin"
 .endproc
 
 .proc vblank
-	lda #CGWSEL_FIXED_COLOR | CGWSEL_PREVENT_ALWAYS
-	sta CGWSEL
+	; make sky dark (subtract)
+	lda #CGADSUB_BG1 | CGADSUB_BACKDROP | CGADSUB_SUBTRACT
+	sta CGADSUB
 	rts
 .endproc
 
 .proc irq
-	; enable color math
-	lda #CGWSEL_FIXED_COLOR
-	sta CGWSEL
+	; make horizon lighter (add)
+	lda #CGADSUB_BG1 | CGADSUB_BACKDROP | CGADSUB_ADD
+	sta CGADSUB
 	rts
 .endproc
 
