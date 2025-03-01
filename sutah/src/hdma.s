@@ -187,8 +187,13 @@ persp112_8_len = *-persp112_8
 		clc
 		adc #$20
 		sta mode1_hscroll
+		a8
+		lda mode1_hscroll+2
+		adc #0
+		sta mode1_hscroll+2
 		bra :++
 	:
+	.a16
 	bit #JOY_SHOULDER_L
 	beq :+
 		ldy #Dir::StrafeLeft
@@ -198,6 +203,10 @@ persp112_8_len = *-persp112_8
 		sec
 		sbc #$20
 		sta mode1_hscroll
+		a8
+		lda mode1_hscroll+2
+		sbc #0
+		sta mode1_hscroll+2
 	:
 	a8
 	rts

@@ -47,30 +47,10 @@ pub fn main() !void {
         try g_writer.writeByte(COLDATA_G | g_u5);
         try b_writer.writeByte(COLDATA_B | b_u5);
 
-        // switch (col_changing) {
-        // COLDATA_R => {
         r -= if (r - SKY_BRIGHTEN_INCREMENT > 0) SKY_BRIGHTEN_INCREMENT else 0;
-        // col_changing = COLDATA_G;
-        // },
-        // COLDATA_G => {
         g -= if (g - SKY_BRIGHTEN_INCREMENT > 0) SKY_BRIGHTEN_INCREMENT else 0;
-        // col_changing = COLDATA_B;
-        // },
-        // COLDATA_B => {
         b -= if (b - B_SKY_BRIGHTEN_INCREMENT > 0) B_SKY_BRIGHTEN_INCREMENT else 0;
-        // col_changing = COLDATA_R;
-        // },
-        // else => {},
-        // }
     }
-
-    // first two bytes; just HDMA 0 for the first HORIZON_SCANLINE-1 number of scanlines
-    // try r_writer.writeByte(HORIZON_SCANLINE);
-    // try g_writer.writeByte(HORIZON_SCANLINE);
-    // try b_writer.writeByte(HORIZON_SCANLINE);
-    // try r_writer.writeByte(0);
-    // try g_writer.writeByte(0);
-    // try b_writer.writeByte(0);
 
     // then the horizon starts
     try r_writer.writeByte(0x80 | NUM_SNES_SCANLINES - HORIZON_SCANLINE);
