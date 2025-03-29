@@ -8,6 +8,7 @@ OAM_Y			= OAM_DMA_ADDR_LO + 1
 OAM_TILE		= OAM_DMA_ADDR_LO + 2
 OAM_INFO		= OAM_DMA_ADDR_LO + 3
 
+
 	.zeropage
 local:			.res 16
 oam_lo_ind:		.res 2
