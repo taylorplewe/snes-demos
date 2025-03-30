@@ -33,7 +33,7 @@ jobs:
         run: |
           gh api graphql -f query='
             query {
-              user(login: "simonhochrein") {
+              user(login: "taylorplewe") {
                 projectsV2(first: 10) {
                   nodes {
                     id
@@ -43,7 +43,7 @@ jobs:
                 }
               }
             }
-          ' >> project_data.json
+          ' > project_data.json
           cat project_data.json
           # echo 'project id'
           # echo $(jq '.data.user.projectV2.id' project_data.json)
