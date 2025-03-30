@@ -13,9 +13,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo 'github.repository_owner:'
-          echo '${{ github.repository_owner }}'
-          echo 'github.event.repository:'
-          echo '${{ toJson(github.event.repository) }}'
-          echo 'github.event.pull_request:'
-          echo '${{ toJson(github.event.pull_request) }}'
+          gh api graphql -f query='
+            query($repoId: ID!, $prId: ID!) {
+              repository(owner: "${{ github.repository_owner }}", name: "${{ github.event.repository.name }}" ) {
+                pullRequest(number: ${{ github.event.pull_request.number }}) {
+                  closingIssuesReferences(first: 1) {
+                    nodes {
+                      id
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          '
+
+          echo 'issue id:'
+          echo $(jq '.data.repository.pullRequest.closingIssuesReferences.nodes[0].id)
+          echo 'issue title:'
+          echo $(jq '.data.repository.pullRequest.closingIssuesReferences.nodes[0].title)
