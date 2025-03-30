@@ -13,4 +13,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ASSIGNEE_ID: ${{ github.event.pull_request.assignees[0].nodes[0].id }}
-        run: echo $ASSIGNEE_ID
+        run: echo "dooooooood"; echo idk; echo 'hello san jose'
