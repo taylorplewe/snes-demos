@@ -34,8 +34,10 @@ jobs:
           gh api graphql -f query='
             query {
               user(login: "taylorplewe") {
-                projectV2(number: 2) {
+                projectV2(first: 10) {
                   id
+                  number
+                  title
                   fields(first:20) {
                     nodes {
                       ... on ProjectV2Field {
@@ -56,14 +58,15 @@ jobs:
               }
             }
           ' >> project_data.json
-          echo 'project id'
-          echo $(jq '.data.user.projectV2.id' project_data.json)
-          echo 'field name'
-          echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .name' project_data.json)
-          echo 'field id'
-          echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json)
-          echo 'PROJECT_ID='$(jq '.data.user.projectV2.id' project_data.json) >> $GITHUB_ENV
-          echo 'STATUS_FIELD_ID='$(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
+          cat project_data.json
+          # echo 'project id'
+          # echo $(jq '.data.user.projectV2.id' project_data.json)
+          # echo 'field name'
+          # echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .name' project_data.json)
+          # echo 'field id'
+          # echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json)
+          # echo 'PROJECT_ID='$(jq '.data.user.projectV2.id' project_data.json) >> $GITHUB_ENV
+          # echo 'STATUS_FIELD_ID='$(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
     
       - name: Get issue info from pull request
         env:
