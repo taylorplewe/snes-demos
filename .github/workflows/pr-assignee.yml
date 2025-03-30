@@ -15,7 +15,7 @@ jobs:
         run: |
           gh api graphql -f query='
             query {
-              node(id: "${{ github.event.pull_request.id }}") {
+              node(id: "${{ github.event.pull_request.node_id }}") {
                 ... on PullRequest {
                   closingIssuesReferences(first: 1) {
                     nodes {
