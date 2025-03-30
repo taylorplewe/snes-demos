@@ -1,0 +1,16 @@
+name: Transition issue to In Review
+
+on:
+  pull_request:
+    types:
+      - assigned
+
+jobs:
+  move_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move issue to "In review"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ASSIGNEE_ID: ${{ github.event.pull_request.assignees[0].nodes[0].id }}
+        run: echo $ASSIGNEE_ID
