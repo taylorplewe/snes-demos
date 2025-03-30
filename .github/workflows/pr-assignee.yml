@@ -33,7 +33,7 @@ jobs:
         run: |
           gh api graphql -f query='
             query {
-              user(login: "taylorplewe") {
+              user(login: "simonhochrein") {
                 projectsV2(first: 10) {
                   nodes {
                     id
