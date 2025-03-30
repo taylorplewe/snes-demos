@@ -9,6 +9,14 @@ jobs:
   move_issue:
     runs-on: ubuntu-latest
     steps:
+      - name: Show Token Permissions
+        run: |
+          curl -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/app
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
       - name: Get Assignee ID (GraphQL)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
