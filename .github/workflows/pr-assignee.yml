@@ -35,21 +35,23 @@ jobs:
             query {
               user(login: "taylorplewe") {
                 projectsV2(first: 10) {
-                  id
-                  number
-                  title
-                  fields(first:20) {
-                    nodes {
-                      ... on ProjectV2Field {
-                        id
-                        name
-                      }
-                      ... on ProjectV2SingleSelectField {
-                        id
-                        name
-                        options {
+                  nodes {
+                    id
+                    number
+                    title
+                    fields(first:20) {
+                      nodes {
+                        ... on ProjectV2Field {
                           id
                           name
+                        }
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options {
+                            id
+                            name
+                          }
                         }
                       }
                     }
