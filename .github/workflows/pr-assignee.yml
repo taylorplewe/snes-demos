@@ -27,6 +27,7 @@ jobs:
               }
             }
           ' > issue_info.json
+          cat issue_info.json
           echo 'ISSUE_ID='$(jq '.data.node.closingIssuesReferences.nodes[0].id' issue_info.json) >> $GITHUB_ENV
 
       - name: Assign issue to PR assignee
@@ -35,7 +36,7 @@ jobs:
         run: |
           gh api graphql -f query='
             mutation($issueId: ID!) {
-              updateIssue(input: {id: "${issueId}", assigneeIds: [ ${{ github.event.pull_request.assignee.id }} ]}) {
+              updateIssue(input: {id: $issueId, assigneeIds: [ ${{ github.event.pull_request.assignee.id }} ]}) {
                 clientMutationId
               }
             }
