@@ -51,11 +51,4 @@ jobs:
       - name: Assign issue to PR assignee
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api graphql -f query='
-            mutation($issueId: ID!, $assigneeId: ID!) {
-              updateIssue(input: {id: $issueId, assigneeIds: [ $assigneeId ]}) {
-                clientMutationId
-              }
-            }
-          ' -f issueId=$ISSUE_ID -f assigneeId=$ASSIGNEE_ID
+        run: echo 'assignee_id'; echo $ASSIGNEE_ID
