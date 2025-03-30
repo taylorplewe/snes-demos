@@ -33,7 +33,7 @@ jobs:
         run: |
           gh api graphql -f query='
             query {
-              repository(owner: "${{ github.repository_owner }}", name: "${{ github.event.repository.name }}") {
+              user(login: "taylorplewe") {
                 projectV2(number: 2) {
                   id
                   fields(first:20) {
@@ -57,13 +57,13 @@ jobs:
             }
           ' >> project_data.json
           echo 'project id'
-          echo $(jq '.data.repository.projectV2.id' project_data.json)
+          echo $(jq '.data.user.projectV2.id' project_data.json)
           echo 'field name'
-          echo $(jq '.data.repository.projectV2.fields.nodes[] | select(.name== "Status") | .name' project_data.json)
+          echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .name' project_data.json)
           echo 'field id'
-          echo $(jq '.data.repository.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json)
-          echo 'PROJECT_ID='$(jq '.data.repository.projectV2.id' project_data.json) >> $GITHUB_ENV
-          echo 'STATUS_FIELD_ID='$(jq '.data.repository.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
+          echo $(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json)
+          echo 'PROJECT_ID='$(jq '.data.user.projectV2.id' project_data.json) >> $GITHUB_ENV
+          echo 'STATUS_FIELD_ID='$(jq '.data.user.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
     
       - name: Get issue info from pull request
         env:
