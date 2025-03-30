@@ -12,4 +12,4 @@ jobs:
       - name: Move issue to "In review"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo '${{ toJson(github) }}'
+        run: echo 'repo name:'; echo '${{ github.repository }}'; echo 'repo id:'; echo '${{ github.repository_id }}'
