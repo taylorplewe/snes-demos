@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Show Token Permissions
-        run: |
-          curl -H "Authorization: token $GITHUB_TOKEN" \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/app
+        run: gh auth status
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
