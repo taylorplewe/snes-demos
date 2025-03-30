@@ -14,9 +14,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api graphql -f query='
-            query() {
+            query {
               node(id: "${{ github.event.pull_request.id }}") {
-                ... for PullRequest {
+                ... on PullRequest {
                   closingIssuesReferences(first: 1) {
                     nodes {
                       id
