@@ -34,27 +34,11 @@ jobs:
           gh api graphql -f query='
             query {
               user(login: "taylorplewe") {
-                projectsV2(first: 10, query: "is:open") {
+                projects(first: 10) {
                   nodes {
                     id
                     number
-                    title
-                    fields(first:20) {
-                      nodes {
-                        ... on ProjectV2Field {
-                          id
-                          name
-                        }
-                        ... on ProjectV2SingleSelectField {
-                          id
-                          name
-                          options {
-                            id
-                            name
-                          }
-                        }
-                      }
-                    }
+                    name
                   }
                 }
               }
