@@ -15,8 +15,8 @@ jobs:
         run: |
           gh api graphql -f query='
             query($repoId: ID!, $prId: ID!) {
-              repository(id: $repoId) {
-                pullRequest(id: $prId) {
+              repository(owner: ${{ github.repository_owner }}, name: ${{ github.event.repository.name }} ) {
+                pullRequest(number: ${{ github.event.pull_request.number }}) {
                   closingIssuesReferences(first: 1) {
                     nodes {
                       id
@@ -26,7 +26,7 @@ jobs:
                 }
               }
             }
-          ' -F repoId=${{ github.repository_id }} -F prId=${{ github.event.pull_request.id }}
+          '
 
           echo 'issue id:'
           echo $(jq '.data.repository.pullRequest.closingIssuesReferences.nodes[0].id)
