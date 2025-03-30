@@ -12,5 +12,5 @@ jobs:
       - name: Move issue to "In review"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ASSIGNEE_ID: ${{ github.event.pull_request.assignees[0].nodes[0].id }}
-        run: echo "dooooooood"; echo idk; echo 'hello san jose'
+          ASSIGNEE_ID: ${{ github.event.pull_request.assignees }}
+        run: echo "here's the assignees:"; echo $ASSIGNEE_ID
