@@ -34,11 +34,11 @@ jobs:
           gh api graphql -f query='
             query {
               user(login: "taylorplewe") {
-                projects(first: 10) {
+                projectsV2(first: 10) {
                   nodes {
                     id
                     number
-                    name
+                    title
                   }
                 }
               }
