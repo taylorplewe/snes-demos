@@ -18,7 +18,7 @@ jobs:
               repository(id: $repoId) {
                 pullRequest(id: $prId) {
                   closingIssuesReferences(first: 1) {
-                    nodes: {
+                    nodes {
                       id
                       title
                     }
