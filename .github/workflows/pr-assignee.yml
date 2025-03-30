@@ -34,7 +34,7 @@ jobs:
           gh api graphql -f query='
             query {
               user(login: "taylorplewe") {
-                projectV2(first: 10) {
+                projectsV2(first: 10) {
                   id
                   number
                   title
