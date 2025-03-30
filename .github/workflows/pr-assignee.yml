@@ -1,4 +1,4 @@
-oname: Transition issue to In Review
+name: Transition issue to In Review
 
 on:
   pull_request:
