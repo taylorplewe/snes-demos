@@ -36,7 +36,7 @@ jobs:
         run: |
           gh api graphql -f query='
             mutation($issueId: ID!) {
-              updateIssue(input: {id: $issueId, assigneeIds: [ ${{ github.event.pull_request.assignee.node_id }} ]}) {
+              updateIssue(input: {id: $issueId, assigneeIds: [ "${{ github.event.pull_request.assignee.node_id }}" ]}) {
                 clientMutationId
               }
             }
