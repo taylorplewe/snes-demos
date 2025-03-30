@@ -9,6 +9,24 @@ jobs:
   move_issue:
     runs-on: ubuntu-latest
     steps:
+      - name: Get Assignee ID (GraphQL)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ASSIGNEE_ID=$(gh api graphql -H "X-GitHub-Next-Global-ID: 1" -f query='
+          query {
+            repository(owner: "${{ github.repository_owner }}", name: "${{ github.event.repository.name }}") {
+              pullRequest(number: ${{ github.event.pull_request.number }}) {
+                assignees(first: 1) {
+                  nodes {
+                    id  # This will now return the new global ID
+                  }
+                }
+              }
+            }
+          }' | jq -r '.data.repository.pullRequest.assignees.nodes[0].id')
+          echo "ASSIGNEE_ID=$ASSIGNEE_ID" >> $GITHUB_ENV
+    
       - name: Get issue info from pull request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,9 +53,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api graphql -f query='
-            mutation($issueId: ID!) {
-              updateIssue(input: {id: $issueId, assigneeIds: [ "${{ github.event.pull_request.assignee.node_id }}" ]}) {
+            mutation($issueId: ID!, $assigneeId: ID!) {
+              updateIssue(input: {id: $issueId, assigneeIds: [ $assigneeId ]}) {
                 clientMutationId
               }
             }
-          ' -f issueId=$ISSUE_ID
+          ' -f issueId=$ISSUE_ID -f assigneeId=$ASSIGNEE_ID
