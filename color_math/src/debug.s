@@ -1,22 +1,22 @@
 .scope str
 	NEWLINE = '['
-	DemoMode: .byte "(Y) Demo mode: ", 0
-	ClipColors: .byte "(B) Clip colors: ", 0
-	PreventMath: .byte "(X) Prevent math: ", 0
-	BlendMode: .byte "(A) Blend mode: ", 0
+	DemoMode: .asciiz "(Y) Demo mode: "
+	ClipColors: .asciiz "(B) Clip colors: "
+	PreventMath: .asciiz "(X) Prevent math: "
+	BlendMode: .asciiz "(A) Blend mode: "
 
-	Fade: .byte "fade[", 0
-	Gradient: .byte "gradient[", 0
-	Subscreen: .byte "subscreen[", 0
+	Fade: .asciiz "fade["
+	Gradient: .asciiz "gradient["
+	Subscreen: .asciiz "subscreen["
 
-	Always: .byte "always[", 0
-	Never: .byte "never[", 0
-	InsideWindow: .byte "inside window[", 0
-	OutsideWindow: .byte "outside window[", 0
+	Always: .asciiz "always["
+	Never: .asciiz "never["
+	InsideWindow: .asciiz "inside window["
+	OutsideWindow: .asciiz "outside window["
 
-	Add: .byte "add[", 0
-	Subtract: .byte "subtract[", 0
-	AddThenHalf: .byte "add then half[", 0
+	Add: .asciiz "add["
+	Subtract: .asciiz "subtract["
+	AddThenHalf: .asciiz "add then half["
 .endscope
 
 .scope debug
