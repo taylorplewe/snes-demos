@@ -27,44 +27,26 @@ _mul:
 	rts
 	
 .a16
-; M7A.16 = sp + 8
-; M7B.16 = sp + 6
-; M7C.16 = sp + 4
-; M7D.16 = sp + 2
 _m7:
-	pla ; return addr
-	pla ; M7D
+	php
 	a8
-	sta M7D
-	xba
-	sta M7D
-	a16
-	pla ; M7C
-	a8
-	sta M7C
-	xba
-	sta M7C
-	a16
-	pla ; M7B
-	a8
-	sta M7B
-	xba
-	sta M7B
-	a16
-	pla ; M7A
-	a8
+	lda 3, s
 	sta M7A
-	xba
+	lda 4, s
 	sta M7A
-	a16
-
-	; get back to return addr
-	tsx
-	txa
-	sec
-	sbc #10
-	tax
-	txs
+	lda 5, s
+	sta M7C
+	lda 6, s
+	sta M7C
+	lda 7, s
+	sta M7B
+	lda 8, s
+	sta M7B
+	lda 9, s
+	sta M7A
+	lda 10, s
+	sta M7A
+	plp
 	rts
 .a8
 
@@ -108,9 +90,11 @@ clear_oam:
 ;	x - oam_lo_ind
 ;	a - bits to set (will be masked off for correct sprite, e.g. send over %10101010 and it will be masked off to only update %--10----)
 set_oam_hi_bits:
-	@new_hi_bits		= local
-	@oam_hi_ind			= local+1
-	@oam_hi_mask		= local+2
+	locals
+		new_hi_bits: .res 1
+		oam_hi_ind:  .res 1
+		oam_hi_mask: .res 1
+	endlocals
 	phx
 	pha
 	a16
@@ -124,7 +108,7 @@ set_oam_hi_bits:
 	lsr a
 	lsr a ; /16
 	a8
-	sta @oam_hi_ind
+	sta oam_hi_ind
 	lda #%00000011
 	@shift_left_loop:
 		cpx #0
@@ -134,17 +118,17 @@ set_oam_hi_bits:
 		dex
 		bra @shift_left_loop
 	:
-	sta @oam_hi_mask
+	sta oam_hi_mask
 
 	pla
-	and @oam_hi_mask
-	sta @new_hi_bits
-	lda @oam_hi_mask
+	and oam_hi_mask
+	sta new_hi_bits
+	lda oam_hi_mask
 	eor #$ff
 	i8
-	ldx @oam_hi_ind
+	ldx oam_hi_ind
 	and OAM_DMA_ADDR_HI, x
-	ora @new_hi_bits
+	ora new_hi_bits
 	sta OAM_DMA_ADDR_HI, x
 	i16
 	plx

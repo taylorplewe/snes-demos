@@ -19,6 +19,17 @@
 		cmp #$8000
 		ror a
 	.endmacro
+	
+	.macro locals
+	.zeropage
+	.org 0
+	.endmacro
+
+	.macro endlocals
+	.code
+	.reloc
+	.endmacro
+
 	.a8
 	.macro mul num1, num2
 		.if (.not .match({num1}, a))

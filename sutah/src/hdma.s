@@ -213,10 +213,16 @@ persp112_8_len = *-persp112_8
 .endproc
 
 .proc calc_persp_rot_m7_vals
-	is_cos_neg = local
-	is_sin_neg = local+2
-	cos8 = local+4
-	sin8 = local+5
+	locals
+		is_cos_neg: .res 2
+		is_sin_neg: .res 2
+		cos8:       .res 1
+		sin8:       .res 1
+		persp:      .res 1
+	endlocals
+
+	lda cos8
+	sta $50
 
 	; calulate cos for later
 	lda angle
@@ -253,10 +259,9 @@ persp112_8_len = *-persp112_8
 
 	ldy #0
 	loop:
-		@persp = local+8
 		; get perspective val
 		lda persp112_8, y
-		sta @persp
+		sta persp
 		phy
 		a16
 		tya
@@ -267,7 +272,7 @@ persp112_8_len = *-persp112_8
 		a8
 
 		; m7a, m7d (cos and -cos)
-		mul @persp, cos8
+		mul persp, cos8
 		a16
 		.repeat 7
 			lsr a
@@ -285,7 +290,7 @@ persp112_8_len = *-persp112_8
 		a8
 
 		; m7b, m7c (sin and -sin)
-		mul @persp, sin8
+		mul persp, sin8
 		a16
 		.repeat 7
 			lsr a
@@ -315,6 +320,8 @@ persp112_8_len = *-persp112_8
 	stz hmda_ready
 	jsr setup
 	jsr control
+	lda #$ea
+	sta calc_persp_rot_m7_vals::cos8
 	jsr calc_persp_rot_m7_vals
 	inc hmda_ready
 	rts
