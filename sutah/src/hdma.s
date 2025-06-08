@@ -221,9 +221,6 @@ persp112_8_len = *-persp112_8
 		persp:      .res 1
 	endlocals
 
-	lda cos8
-	sta $50
-
 	; calulate cos for later
 	lda angle
 	clc
@@ -320,8 +317,6 @@ persp112_8_len = *-persp112_8
 	stz hmda_ready
 	jsr setup
 	jsr control
-	lda #$ea
-	sta calc_persp_rot_m7_vals::cos8
 	jsr calc_persp_rot_m7_vals
 	inc hmda_ready
 	rts

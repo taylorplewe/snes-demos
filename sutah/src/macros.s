@@ -21,13 +21,14 @@
 	.endmacro
 	
 	.macro locals
-	.zeropage
-	.org 0
+		.pushseg
+		.zeropage
+		.org 0
 	.endmacro
 
 	.macro endlocals
-	.code
-	.reloc
+		.reloc
+		.popseg
 	.endmacro
 
 	.a8
