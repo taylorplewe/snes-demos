@@ -22,6 +22,22 @@
 		ror a
 	.endmacro
 
+    .macro neg
+        .if .asize = 8
+            eor #$ff
+        .else
+            eor #$ffff
+        .endif
+        inc
+    .endmacro
+
+    .macro abs
+        .local end
+        bpl end
+        neg
+        end:
+    .endmacro
+
     .a8
 	.i16
 	.macro dmaSet chan, reg, dmap, src, count
