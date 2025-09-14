@@ -8,14 +8,10 @@
 .include "src/ppu.s"
 .include "src/window.s"
 
-.bss
+.zeropage
 
-test1: .res 1
+local: .res SIZEOF_LOCAL_VARS
 nmi_ready: .res 1
-
-; .org 0
-; test2: .res 1
-; .reloc
 
 
 .rodata
@@ -38,16 +34,14 @@ reset:
 	clearMemory 0, 0
 	sta MDMAEN
 
-	lda #$ea
-	sta test1
-
 	jsr ppu::clear
 	jsr ppu::setUpAmsterdam
 	jsr window::init
 	jsr ppu::init
 
 forever:
-	; update
+	jsr window::bresenham
+	jsr window::otherFunc
 
 	inc nmi_ready
 	wai

@@ -58,3 +58,13 @@
 		sta WMADDH
 	    dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, len
 	.endmacro
+
+	; local function vars
+	SIZEOF_LOCAL_VARS = 16
+	localVarPos .set 0
+	.define localVars localVarPos .set 0
+	.macro var name, size
+		name = localVarPos
+		localVarPos .set localVarPos + size
+		.assert localVarPos <= SIZEOF_LOCAL_VARS, error, "Max size of local var space exceeded"
+	.endmacro

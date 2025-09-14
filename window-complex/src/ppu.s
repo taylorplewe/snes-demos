@@ -10,8 +10,9 @@ amsterdam_pal_len = * - amsterdam_pal
 .segment "BANK1"
 
 amsterdam:
-	.incbin "..\chr\amst1.bin"
-	.incbin "..\chr\amst2.bin"
+	; .incbin "..\chr\amst1.bin"
+	; .incbin "..\chr\amst2.bin"
+	.incbin "..\chr\amst.chr"
 amsterdam_len = * - amsterdam
 
 
