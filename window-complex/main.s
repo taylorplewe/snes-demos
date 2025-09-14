@@ -24,34 +24,45 @@ zero: .byte 0
 .a8
 .i8
 reset:
-	clc
-	xce
+    clc
+    xce
 
-	i16
-	ldx #$1fff
-	txs
+    i16
+    ldx #$1fff
+    txs
 
-	clearMemory 0, 0
-	sta MDMAEN
+    clearMemory 0, 0
+    sta MDMAEN
 
-	jsr ppu::clear
-	jsr ppu::setUpAmsterdam
-	jsr window::init
-	jsr ppu::init
+    jsr ppu::clear
+    jsr ppu::setUpAmsterdam
+    jsr window::init
+    jsr ppu::init
+
+    ldy #$300
+    lda #40
+    pha
+    lda #40
+    pha
+    lda #30
+    xba
+    lda #30
+    jsr window::bresenham
+    pla
+    pla
 
 forever:
-	jsr window::bresenham
 
-	inc nmi_ready
-	wai
-	bra forever
+    inc nmi_ready
+    wai
+    bra forever
 
 nmi:
-	lda nmi_ready
-	beq end
+    lda nmi_ready
+    beq end
 
-	jsr window::vblank
-	
-	stz nmi_ready
-	end:
-	rti
+    jsr window::vblank
+    
+    stz nmi_ready
+    end:
+    rti
