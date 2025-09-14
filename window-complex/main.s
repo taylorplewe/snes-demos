@@ -41,7 +41,6 @@ reset:
 
 forever:
 	jsr window::bresenham
-	jsr window::otherFunc
 
 	inc nmi_ready
 	wai

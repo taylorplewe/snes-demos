@@ -33,6 +33,9 @@ points_x:
 points_y:
 	.byte  40, 66,  66
 
+; in:
+	; A:8 = p1
+	; B:8 = p2
 .a8
 .i16
 .proc bresenham
@@ -45,10 +48,10 @@ points_y:
 	var sy,  1
 	var err, 1
 
-	lda #$ea
 	sta p1
-	lda #$cd
-	sta dx
+	xba
+	sta p2
+
 	rts
 .endproc
 
