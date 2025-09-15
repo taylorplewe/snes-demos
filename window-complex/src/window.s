@@ -34,38 +34,38 @@ points_y:
     .byte  40, 66,  66
 
 ; in:
-    ; A:8  = p1.x
-    ; B:8  = p1.y
-    ; SP+3 = p2.x
-    ; SP+4 = p2.y
+    ; A:16 = p1.x
+    ; SP+3 = p1.y
+    ; SP+5 = p2.x
+    ; SP+7 = p2.y
     ; Y:16 = pointer to memory to write to; will write XYXYXY...
-.a8
+.a16
 .i16
 .proc bresenham
     localVars
-    var p1x, 1
-    var p2x, 1
-    var p1y, 1
-    var p2y, 1
-    var dx,  1
-    var dy,  1
-    var sx,  1
-    var sy,  1
-    var err, 1
-    var cx,  1
-    var cy,  1
+    var p1x, 2
+    var p2x, 2
+    var p1y, 2
+    var p2y, 2
+    var dx,  2
+    var dy,  2
+    var sx,  2
+    var sy,  2
+    var err, 2
+    var cx,  2
+    var cy,  2
 
     wdm 0
     
     ; set p1, p2 and c
     sta p1x
     sta cx
-    xba
+    lda 3, s
     sta p1y
     sta cy
-    lda 3, s
+    lda 5, s
     sta p2x
-    lda 4, s
+    lda 7, s
     sta p2y
 
     ; dx = abs(p2.x - p1.x)
@@ -84,24 +84,24 @@ points_y:
     sta dy
 
     ; sx = p1.x < p2.x ? 1 : -1
-    lda p2x
-    cmp p1x
-    rol
-    rol
-    and #%10
-    sec
-    sbc #1
+    lda #1
     sta sx
+    lda p1x
+    cmp p2x
+    bmi :+
+        lda #mi(1)
+        sta sx
+    :
     
     ; sy = p1.y < p2.y ? 1 : -1
-    lda p2y
-    cmp p1y
-    rol
-    rol
-    and #%10
-    sec
-    sbc #1
+    lda #1
     sta sy
+    lda p1y
+    cmp p2y
+    bmi :+
+        lda #mi(1)
+        sta sy
+    :
 
     ; err = dx + dy
     lda dx
@@ -110,16 +110,12 @@ points_y:
     sta err
 
     ; num_pixels = max(dx, -dy)
-    lda #0
-    xba
     lda dx
     tax
     lda dy
     neg
     cmp dx
-    bcc :+
-        lda dy
-        neg
+    bmi :+
         tax
     :
     ; for (0..num_pixels)
@@ -129,18 +125,18 @@ points_y:
         lda cx
         sta 0, y
         lda cy
-        sta 1, y
+        sta 2, y
 
         ; e2 = err * 2
-        var e2, 1
+        var e2, 2
         lda err
         asl
         sta e2
 
-        ; if e2 >= dy (dy is ALWAYS negative or 0)
-        lda dy
-        cmp e2
-        bcc xMoveEnd
+        ; if e2 >= dy
+        ; lda e2
+        cmp dy
+        bmi xMoveEnd
             ; if c.x == p2.x then break
             lda cx
             cmp p2x
@@ -159,12 +155,11 @@ points_y:
             sta cx
         xMoveEnd:
 
-        ; if e2 <= dx (dx is ALWAYS positive or 0)
+        ; if e2 <= dx
         lda e2
         cmp dx
-        bcc yMove
         beq yMove
-        bra yMoveEnd
+        bpl yMoveEnd
         yMove:
             ; if c.y == p2.y then break
             lda cy
@@ -183,6 +178,8 @@ points_y:
             sta cy
         yMoveEnd:
 
+        iny
+        iny
         iny
         iny
         dex

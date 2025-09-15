@@ -39,17 +39,20 @@ reset:
     jsr window::init
     jsr ppu::init
 
+    a16
     ldy #$300
     lda #40
     pha
     lda #40
     pha
     lda #30
-    xba
+    pha
     lda #30
     jsr window::bresenham
     pla
     pla
+    pla
+    a8
 
 forever:
 

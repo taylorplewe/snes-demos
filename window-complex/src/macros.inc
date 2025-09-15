@@ -75,8 +75,10 @@
         dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, zero, len
     .endmacro
 
+    .define mi(num) .loword(-num)
+
     ; local function vars
-    SIZEOF_LOCAL_VARS = 16
+    SIZEOF_LOCAL_VARS = 32
     localVarPos .set 0
     .define localVars localVarPos .set 0
     .macro var name, size
