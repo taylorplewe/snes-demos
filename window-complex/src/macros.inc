@@ -38,6 +38,26 @@
         end:
     .endmacro
 
+    ; in:
+        ; A:8  = divisor
+        ; X:16 = dividend
+    ; out:
+        ; X:16 = quotient
+    .macro div
+    	stx WRDIVL
+    	sta WRDIVB
+        nop
+        nop
+        nop
+        nop
+        nop
+    	nop
+    	nop
+    	nop
+    	nop
+    	ldx RDDIVL
+    .endmacro
+
     .a8
     .i16
     .macro dmaSet chan, reg, dmap, src, count
