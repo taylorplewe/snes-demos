@@ -151,7 +151,7 @@ amsterdam_len = * - amsterdam
 	lda #$0f
 	sta INIDISP
 
-	lda #NMITIMEN_NMIENABLE
+	lda #NMITIMEN_NMIENABLE | NMITIMEN_AUTOJOY
 	sta NMITIMEN
 	
 	rts

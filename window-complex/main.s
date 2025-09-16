@@ -12,7 +12,8 @@
 
 local: .res SIZEOF_LOCAL_VARS
 nmi_ready: .res 1
-test_x: .res 1
+test_x: .res 2
+test_y: .res 2
 
 
 .rodata
@@ -41,7 +42,38 @@ reset:
     jsr ppu::init
 
 forever:
-    inc test_x
+    waitForInput:
+    	lda HVBJOY
+    	lsr a
+    	bcs waitForInput
+
+    a16
+    lda JOY1L
+    bit #JOY_U
+    bne moveU
+    bit #JOY_D
+    bne moveD
+    lrCheck:
+    lda JOY1L
+    bit #JOY_L
+    bne moveL
+    bit #JOY_R
+    bne moveR
+    bra moveEnd
+    moveU:
+        dec test_y
+        bra lrCheck
+    moveD:
+        inc test_y
+        bra lrCheck
+    moveL:
+        dec test_x
+        bra moveEnd
+    moveR:
+        inc test_x
+    moveEnd:
+    a8
+
     jsr window::update
 
     a16
@@ -49,7 +81,8 @@ forever:
     pha
     lda #$20 ; p2.x
     pha
-    lda #$0a ; p1.y
+    ; lda #$0a ; p1.y
+    lda test_y
     pha
     ; lda #$80 ; p1.x
     lda test_x
