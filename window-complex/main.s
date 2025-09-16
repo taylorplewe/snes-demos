@@ -12,6 +12,7 @@
 
 local: .res SIZEOF_LOCAL_VARS
 nmi_ready: .res 1
+test_x: .res 1
 
 
 .rodata
@@ -39,22 +40,24 @@ reset:
     jsr window::init
     jsr ppu::init
 
+forever:
+    inc test_x
+    jsr window::update
+
     a16
-    ldy #$300
-    lda #40
+    lda #$a0 ; p2.y
     pha
-    lda #40
+    lda #$20 ; p2.x
     pha
-    lda #30
+    lda #$0a ; p1.y
     pha
-    lda #30
+    ; lda #$80 ; p1.x
+    lda test_x
     jsr window::bresenham
     pla
     pla
     pla
     a8
-
-forever:
 
     inc nmi_ready
     wai

@@ -1,0 +1,17 @@
+- info byte to start line data
+	- length
+	- Y direction
+	- X direction
+
+- convert line XY table to scanline-X-value table
+	- Y direction positive?
+		- start from START of line
+	- else
+		- start from END of line
+	- for each pixel in line
+		- X:16 = Y value * 2
+		- X direction positive?
+			- get FIRST X value with this Y value
+		- else
+			- get LAST X value with this Y value
+		- store that X value at wh_table, x
