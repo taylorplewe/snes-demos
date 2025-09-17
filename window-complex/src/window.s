@@ -273,8 +273,8 @@ one: .byte 1
 .macro windowClearNextWindowBuffer
     stz WMADDH
     lda counter
-    and #1
-    bne :+
+    lsr
+    bcs :+
         ldx #wh0_data_0
         stx WMADDL
         dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
@@ -405,8 +405,8 @@ one: .byte 1
 
         ; set dest_addr
         lda counter
-        and #1
-        bne setDestOdd
+        lsr
+        bcs setDestOdd
         ;setDestEven:
             lda is_drawing_up
             bne :+
@@ -457,8 +457,8 @@ one: .byte 1
     a8
 
     lda counter
-    and #1
-    bne :+
+    lsr
+    bcs :+
         dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_0
         dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_0
         lda #%110
