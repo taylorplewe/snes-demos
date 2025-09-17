@@ -1,0 +1,25 @@
+-- CORNERS --
+- while drawing window 1
+- is_drawing_up = 0
+- start at highest point
+- for each point
+	- is_drawing_up == 0?
+		- next point.y > this point.y?
+			- draw
+		- else
+
+
+-- EXCLUSION --
+
+- start from topmost point
+- 
+
+-- HALVE --
+- go through each of the five inner points
+- find the LOWEST (ly) and HIGHEST (hy) Y's (their indexes)
+- split the star in half on (ly--hy)
+- WH0 track starts on the point to the LEFT of hy
+	- when you hit ly, connect to hy
+- WH1 track starts on the point to the RIGHT of hy
+	- when you hit hy, connect to ly
+

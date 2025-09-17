@@ -5,21 +5,21 @@
 ; double buffering is needed so the code that's writing to these
 ; tables doesn't interfere with the HDMA which is reading what's
 ; there currently (generated last frame)
+;
+; the following code allocates (226*8) = 1,808 bytes in total.
+.repeat 2, buffer_ind
+    .repeat 4, window_reg_ind
+        .ident(.sprintf("wh%d_table_%d", window_reg_ind, buffer_ind)): .res 1
+        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224 + 1
+    .endrepeat
+.endrepeat
 
-wh0_table_0: .res 1
-wh0_data_0: .res 224 + 1 ; another info byte is needed after 127 scanlines
-wh1_table_0: .res 1
-wh1_data_0: .res 224 + 1
+star_points:         .res 10 * 2 * 2 ; 16-bit X,Y values
 
-wh0_table_1: .res 1
-wh0_data_1: .res 224 + 1
-wh1_table_1: .res 1
-wh1_data_1: .res 224 + 1
-
-shape_1_points: .res 32 ; 8 16-bit X,Y values
-shape_2_points: .res 24 ; 6 16-bit X,Y values
-
-is_drawing_up: .res 2
+is_drawing_up:       .res 2
+is_drawing_window_2: .res 2
+lowest_inner_index:  .res 2 ; for splitting the star down the middle and drawing 2 windows
+highest_inner_index: .res 2
 
 
 .rodata
@@ -49,14 +49,18 @@ one: .byte 1
     lda #$80 | 127
     sta wh0_table_0
     sta wh1_table_0
+    sta wh2_table_0
+    sta wh3_table_0
     sta wh0_table_1
     sta wh1_table_1
+    sta wh2_table_1
+    sta wh3_table_1
 
     .macro setStarPoint x_val, y_val
         lda #x_val
-        sta shape_1_points, y
+        sta star_points, y
         lda #y_val
-        sta shape_1_points+2, y
+        sta star_points+2, y
         .repeat 4
             iny
         .endrepeat
@@ -64,24 +68,16 @@ one: .byte 1
 
     ldy #0
     a16
-    setStarPoint 125,  37
-    setStarPoint 109,  89
-    setStarPoint  54,  91
-    setStarPoint  97, 124
-    setStarPoint  82, 177
-    setStarPoint 125, 147
-    setStarPoint 154, 124
-    setStarPoint 143,  89
-    
-    ; setStarPoint $80, $40
-    ; setStarPoint $40, $80
-    ; setStarPoint $80, $c0
-    ; setStarPoint $c0, $80
-    ; 
-    ; setStarPoint $20, $10
-    ; setStarPoint $10, $20
-    ; setStarPoint $20, $30
-    ; setStarPoint $30, $20
+    setStarPoint 128,  38
+    setStarPoint 111,  89
+    setStarPoint  57,  91
+    setStarPoint 100, 124
+    setStarPoint  85, 176
+    setStarPoint 128, 146
+    setStarPoint 170, 176
+    setStarPoint 155, 124
+    setStarPoint 197,  91
+    setStarPoint 144,  89
     a8
     
     rts
@@ -90,35 +86,6 @@ one: .byte 1
 .a8
 .i16
 .proc update
-    ; move star
-    a16
-    lda JOY1L
-    bit #JOY_U
-    bne moveU
-    bit #JOY_D
-    bne moveD
-    lrCheck:
-    lda JOY1L
-    bit #JOY_L
-    bne moveL
-    bit #JOY_R
-    bne moveR
-    bra moveEnd
-    moveU:
-        dec shape_1_points+10
-        bra lrCheck
-    moveD:
-        inc shape_1_points+10
-        bra lrCheck
-    moveL:
-        dec shape_1_points+12
-        bra moveEnd
-    moveR:
-        inc shape_1_points+12
-    moveEnd:
-    a8
-
-    ; rts
     jmp drawStar
 .endproc
 
@@ -144,8 +111,6 @@ one: .byte 1
     var xadd,         2 ; 8:8 fixed point
     var yadd,         2
     var dest_addr,    2
-
-    wdm 0
 
     ; set p1, p2 and c
     sta p1x
@@ -305,7 +270,7 @@ one: .byte 1
 
 .a8
 .i16
-.proc drawStar
+.macro windowClearNextWindowBuffer
     stz WMADDH
     lda counter
     and #1
@@ -314,53 +279,122 @@ one: .byte 1
         stx WMADDL
         dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
         ldx #wh1_data_0
+        stx WMADDL
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
+        ldx #wh2_data_0
+        stx WMADDL
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        ldx #wh3_data_0
         bra :++
     :
         ldx #wh0_data_1
         stx WMADDL
         dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
         ldx #wh1_data_1
+        stx WMADDL
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
+        ldx #wh2_data_1
+        stx WMADDL
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        ldx #wh3_data_1
     :
     stx WMADDL
     dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
+.endmacro
 
-    ; info byte
-    a8
+.a8
+.i16
+.macro windowSetMiddleInfoBytes
     lda #$80 | (224 - 127)
     sta wh0_data_0 + 127
     sta wh1_data_0 + 127
+    sta wh2_data_0 + 127
+    sta wh3_data_0 + 127
     sta wh0_data_1 + 127
     sta wh1_data_1 + 127
-    a16
+    sta wh2_data_1 + 127
+    sta wh3_data_1 + 127
+.endmacro
 
-    ldx #0
-    stx is_drawing_up
+.a16
+.i16
+.macro windowFindHighestAndLowestInnerIndexes
+    .local loop
+    var ly, 2
+    var hy, 2
 
+    lda star_points+6
+    sta ly
+    sta hy
+    lda #4
+    sta lowest_inner_index
+    sta highest_inner_index
+    ldx #3 * 4 ; 2nd inner point
     loop:
-        localVars
-        var p1x, 2
-        var p1y, 2
-        var p2x, 2
-        var p2y, 2
+        lda star_points+2, x
+        pha
+        cmp ly
+        bpl :+
+            sta ly
+            stx lowest_inner_index
+        :
+        pla
+        cmp hy
+        bmi :+
+            sta hy
+            stx highest_inner_index
+        :
+        txa
+        clc
+        adc #2 * 4 ; skip next 2 X,Y points
+        tax
+        cpx #10 * 4
+        bcc loop
+.endmacro
 
-        lda shape_1_points, x
+.a8
+.i16
+.proc drawStar
+    localVars
+    var p1x,         2
+    var p1y,         2
+    var p2x,         2
+    var p2y,         2
+    var start_index, 2
+
+    windowClearNextWindowBuffer
+    windowSetMiddleInfoBytes
+    a16
+    windowFindHighestAndLowestInnerIndexes
+
+    stz is_drawing_up
+    ldx lowest_inner_index
+    loop:
+        lda star_points, x
         sta p1x
-        lda shape_1_points+2, x
+        lda star_points+2, x
         sta p1y
-        cpx #28
-        ; cpx #12
-        bcc :+
-            lda shape_1_points
+        cpx highest_inner_index ; if at highest inner point (uppermost appearing onscreen), go across star
+        beq p2SetLowest
+        cpx #9 * 4 ; if at last point, wrap around to first
+        bcc p2SetNext
+        p2SetFirst:
+            lda star_points
             sta p2x
-            lda shape_1_points+2
-            sta p2y
-            bra :++
-        :
-            lda shape_1_points+4, x
+            lda star_points+2
+            bra p2SetEnd
+        p2SetLowest:
+            ldy lowest_inner_index
+            lda star_points, y
             sta p2x
-            lda shape_1_points+6, x
-            sta p2y
-        :
+            lda star_points+2, y
+            bra p2SetEnd
+        p2SetNext:
+            lda star_points+4, x
+            sta p2x
+            lda star_points+6, x
+        p2SetEnd:
+        sta p2y
 
         lda p1y
         cmp p2y
@@ -401,7 +435,6 @@ one: .byte 1
         lda p1y
         pha
         lda p1x
-        ; jsr window::bresenham
         jsr window::dda
         pla
         pla
@@ -409,12 +442,17 @@ one: .byte 1
 
         ; next:
         pla
+        cmp highest_inner_index
+        beq loopEnd
         clc
         adc #4
+        cmp #10 * 4
+        bcc :+
+            lda #0
+        :
         tax
-        cpx #32
-        ; cpx #16
-        bcc loop
+        jmp loop
+    loopEnd:
 
     a8
 
@@ -423,14 +461,15 @@ one: .byte 1
     bne :+
         dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_0
         dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_0
-        lda #%00110
+        lda #%110
         bra :++
     :
-        dmaSet 3, WH0, DMAP_1REG_1WR, wh0_table_1
-        dmaSet 4, WH1, DMAP_1REG_1WR, wh1_table_1
-        lda #%11000
+        dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_1
+        dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_1
+        lda #%110
     :
 
+    lda #%110
     sta HDMAEN
 
     rts
@@ -459,8 +498,6 @@ one: .byte 1
     var err, 2
     var cx,  2
     var cy,  2
-
-    wdm 0
 
     ; set p1, p2 and c
     sta p1x
@@ -612,33 +649,6 @@ one: .byte 1
         dex
         bne loop
     loopEnd:
-
-    ; ; info bytes
-    ; pla
-    ; a8
-    ; ply
-    ; sta LineInfo::length, y
-    ; lda #Direction::Forward
-    ; sta LineInfo::x_dir, y
-    ; sta LineInfo::y_dir, y
-    ; a16
-
-    ; lda p1x
-    ; cmp p2x
-    ; bmi :+
-    ;     a8
-    ;     lda #Direction::Backward
-    ;     sta LineInfo::x_dir, y
-    ;     a16
-    ; :
-    ; lda p1y
-    ; cmp p2y
-    ; bmi :+
-    ;     a8
-    ;     lda #Direction::Backward
-    ;     sta LineInfo::y_dir, y
-    ;     a16
-    ; :
     
     rts
 .endproc
