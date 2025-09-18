@@ -14,12 +14,13 @@
     .endrepeat
 .endrepeat
 
-star_points:         .res 10 * 2 * 2 ; 16-bit X,Y values
+star_points:          .res 10 * 2 * 2 ; 16-bit X,Y values
 
-is_drawing_up:       .res 2
-is_drawing_window_2: .res 2
-lowest_inner_index:  .res 2 ; for splitting the star down the middle and drawing 2 windows
-highest_inner_index: .res 2
+is_drawing_window_2:  .res 2
+star_point_inc_amt:   .res 2 ; what to add to X register to get next point to check (+4 for window 1 (CCW), -4 for window 2 (CW))
+next_star_point_ind:  .res 2
+lowest_inner_index:   .res 2 ; for splitting the star down the middle and drawing 2 windows
+highest_inner_index:  .res 2
 
 
 .rodata
@@ -27,34 +28,26 @@ highest_inner_index: .res 2
 two: .byte 2
 one: .byte 1
 
-
 .code
 
 .a8
 .i16
 .proc init
-    lda #WSEL(WSEL_LAYER_BG1, WSEL_W1, WSEL_INVERT)
+    lda #WSEL(WSEL_LAYER_BG1, WSEL_W1, WSEL_INVERT) | WSEL(WSEL_LAYER_BG1, WSEL_W2, WSEL_INVERT)
     sta W12SEL
+    lda #WLOG(WLOG_LAYER_BG1, WLOG_AND)
+    sta WBGLOG
     lda #TMSW_BG1
     sta TMW
 
     ; set up hdma
-    ; dmaSet 1, WH0, DMAP_2REG_1WR, wh_lookup
-    ; dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table
-    ; dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table
-    ; dmaSet 1, WH0, DMAP_1REG_1WR, test
-    ; dmaSet 1, WH0, DMAP_1REG_1WR, test
-
     ; first info NLTRx info byte
     lda #$80 | 127
-    sta wh0_table_0
-    sta wh1_table_0
-    sta wh2_table_0
-    sta wh3_table_0
-    sta wh0_table_1
-    sta wh1_table_1
-    sta wh2_table_1
-    sta wh3_table_1
+    .repeat 2, buffer_ind
+        .repeat 4, window_reg_ind
+            sta .ident(.sprintf("wh%d_table_%d", window_reg_ind, buffer_ind))
+        .endrepeat
+    .endrepeat
 
     .macro setStarPoint x_val, y_val
         lda #x_val
@@ -83,12 +76,6 @@ one: .byte 1
     rts
 .endproc
 
-.a8
-.i16
-.proc update
-    jmp drawStar
-.endproc
-
 ; in:
     ; A:16 = p1.x
     ; SP+3 = p1.y
@@ -114,10 +101,8 @@ one: .byte 1
 
     ; set p1, p2 and c
     sta p1x
-    sta cx
     lda 3, s
     sta p1y
-    sta cy
     lda 5, s
     sta p2x
     lda 7, s
@@ -154,15 +139,6 @@ one: .byte 1
     cmp xdiff
     bcc xDiffGreater
     yDiffGreater:
-        lda is_ydiff_neg
-        bne :+
-            ldx #$100 ; 1.0
-            bra :++
-        :
-            ldx #mi($100)
-        :
-        stx yadd
-
         ; xadd = xdiff / ydiff
         lda xdiff
         xba
@@ -181,23 +157,19 @@ one: .byte 1
             a8
         :
 
+        ; set length
         lda #0
         xba
         lda ydiff
         tax
         inx ; draw last pixel too
 
-        bra beforeLoop
-    xDiffGreater:
-        lda is_xdiff_neg
+        lda is_ydiff_neg
         bne :+
-            ldx #$100 ; 1.0
-            bra :++
+            jmp yIncBeforeLoop
         :
-            ldx #mi($100)
-        :
-        stx xadd
-
+        jmp yDecBeforeLoop
+    xDiffGreater:
         ; yadd = ydiff / xdiff
         lda ydiff
         xba
@@ -216,46 +188,39 @@ one: .byte 1
             a8
         :
 
+        ; set length
         lda #0
         xba
         lda xdiff
         tax
         inx ; draw last pixel too
+
+        lda is_xdiff_neg
+        bne xDecBeforeLoop
+        ;bra xIncBeforeLoop
     end:
 
-    beforeLoop:
-        ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
-        lda p1x
-        xba
-        lda #$80
-        tay
-        sty cx
-        ; cy = (p1y << 8) + $80 (.5)
-        lda p1y
-        xba
-        lda #$80
-        tay
-        sty cy
-
-    loop:
+    .a8
+    .i16
+    xIncBeforeLoop:
+    ; cy = (p1y << 8) + $80 (.5) (so as to be "in the middle of the pixel")
+    lda p1y
+    xba
+    lda #$80
+    tay
+    sty cy
+    ai8
+    lda p1x
+    pha
+    xIncLoop:
         ; plot pixel
+        ldy cy + 1
         a8
-        lda #0
-        xba
-        lda cy + 1
-        cmp #127
-        bcc :+
-            inc
-        :
-        tay
-        lda cx + 1
+        pla
         sta (dest_addr), y
+        inc
+        pha
         a16
-
-        lda cx
-        clc
-        adc xadd
-        sta cx
 
         lda cy
         clc
@@ -263,14 +228,109 @@ one: .byte 1
         sta cy
 
         dex
-        bne loop
+        bne xIncLoop
+    plx
+    ai16
+    rts
 
+    .a8
+    .i16
+    xDecBeforeLoop:
+    ; cy = (p1y << 8) + $80 (.5)
+    lda p1y
+    xba
+    lda #$80
+    tay
+    sty cy
+    ai8
+    lda p1x
+    pha
+    xDecLoop:
+        ; plot pixel
+        ldy cy + 1
+        a8
+        pla
+        sta (dest_addr), y
+        dec
+        pha
+        a16
+
+        lda cy
+        clc
+        adc yadd
+        sta cy
+
+        dex
+        bne xDecLoop
+    xEnd:
+    plx
+    ai16
+    rts
+
+    .a8
+    .i16
+    yIncBeforeLoop:
+    ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
+    lda p1x
+    xba
+    lda #$80
+    tay
+    sty cx
+    i8
+    lda cx
+    xba
+    ldy p1y
+    yIncLoop:
+        ; plot pixel
+        a8
+        sta (dest_addr), y
+        a16
+        iny
+
+        xba
+        clc
+        adc xadd
+        xba
+
+        dex
+        bne yIncLoop
+    ai16
+    rts
+
+    .a8
+    .i16
+    yDecBeforeLoop:
+    ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
+    lda p1x
+    xba
+    lda #$80
+    tay
+    sty cx
+    i8
+    lda cx
+    xba
+    ldy p1y
+    yDecLoop:
+        ; plot pixel
+        a8
+        sta (dest_addr), y
+        a16
+        dey
+
+        xba
+        clc
+        adc xadd
+        xba
+
+        dex
+        bne yDecLoop
+    ai16
     rts
 .endproc
 
 .a8
 .i16
-.macro windowClearNextWindowBuffer
+.macro window_clearNextWindowBuffer
     stz WMADDH
     lda counter
     lsr
@@ -302,23 +362,43 @@ one: .byte 1
     dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
 .endmacro
 
+.a16
+.i16
+.macro window_moveUpperWhHalvesUp
+    lda counter
+    lsr
+    bcs :+
+        .repeat 4, i
+            lda #(224-127) - 1
+            ldx #.ident(.sprintf("wh%d_data_0", i)) + 223
+            ldy #.ident(.sprintf("wh%d_data_0", i)) + 224
+            mvp 0,0
+        .endrepeat
+        bra :++
+    :
+        .repeat 4, i
+            lda #(224-127) - 1
+            ldx #.ident(.sprintf("wh%d_data_1", i)) + 223
+            ldy #.ident(.sprintf("wh%d_data_1", i)) + 224
+            mvp 0,0
+        .endrepeat
+    :
+.endmacro
+
 .a8
 .i16
-.macro windowSetMiddleInfoBytes
+.macro window_setMiddleInfoBytes
     lda #$80 | (224 - 127)
-    sta wh0_data_0 + 127
-    sta wh1_data_0 + 127
-    sta wh2_data_0 + 127
-    sta wh3_data_0 + 127
-    sta wh0_data_1 + 127
-    sta wh1_data_1 + 127
-    sta wh2_data_1 + 127
-    sta wh3_data_1 + 127
+    .repeat 2, buffer_ind
+        .repeat 4, window_reg_ind
+            sta .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)) + 127
+        .endrepeat
+    .endrepeat
 .endmacro
 
 .a16
 .i16
-.macro windowFindHighestAndLowestInnerIndexes
+.macro window_findHighestAndLowestInnerIndexes
     .local loop
     var ly, 2
     var hy, 2
@@ -352,82 +432,127 @@ one: .byte 1
         bcc loop
 .endmacro
 
+.rodata
+; DUdu | D = drawing D on w1, U = drawing U on w1, d = drawing D on w2, u = drawing U on w2
+is_drawing_right_side_tab: .word 0, 1, 1, 0
+
+; 12345667
+; --------
+; 11112222 buffers 1 and 2
+; 11221122 windows 1 and 2 
+; LRLRLRLR left and right sides
+dest_addr_tab:
+    .addr wh0_data_0
+    .addr wh1_data_0
+    .addr wh2_data_0
+    .addr wh3_data_0
+    .addr wh0_data_1
+    .addr wh1_data_1
+    .addr wh2_data_1
+    .addr wh3_data_1
+.code
+
 .a8
 .i16
 .proc drawStar
     localVars
-    var p1x,         2
-    var p1y,         2
-    var p2x,         2
-    var p2y,         2
-    var start_index, 2
+    var p1x,                   2
+    var p1y,                   2
+    var p2x,                   2
+    var p2y,                   2
+    var start_index,           2
+    var is_drawing_right_side, 2
 
-    windowClearNextWindowBuffer
-    windowSetMiddleInfoBytes
+    window_clearNextWindowBuffer
     a16
-    windowFindHighestAndLowestInnerIndexes
+    window_findHighestAndLowestInnerIndexes
 
-    stz is_drawing_up
+    stz is_drawing_window_2
+    lda #4
+    sta star_point_inc_amt
     ldx lowest_inner_index
     loop:
+        ; set p1
         lda star_points, x
         sta p1x
         lda star_points+2, x
         sta p1y
+
+        ; set p2
         cpx highest_inner_index ; if at highest inner point (uppermost appearing onscreen), go across star
-        beq p2SetLowest
-        cpx #9 * 4 ; if at last point, wrap around to first
-        bcc p2SetNext
-        p2SetFirst:
-            lda star_points
-            sta p2x
-            lda star_points+2
-            bra p2SetEnd
+        bne p2SetNext
         p2SetLowest:
             ldy lowest_inner_index
+            sty next_star_point_ind
             lda star_points, y
             sta p2x
             lda star_points+2, y
             bra p2SetEnd
         p2SetNext:
-            lda star_points+4, x
+            phx
+            txa
+            clc
+            adc star_point_inc_amt
+            ; wrapped around backwards?
+            bpl :+
+                lda #9 * 4
+                bra :++
+            :
+            ; wrapped around forwards?
+            cmp #10 * 4
+            bcc :+
+                lda #0
+            :
+            tax
+            lda star_points, x
             sta p2x
-            lda star_points+6, x
+            lda star_points+2, x
+            stx next_star_point_ind
+            plx
         p2SetEnd:
         sta p2y
 
+        ; is_drawing_right_side = if is_drawing_window_2 { p2.y > p1.y } else { p1.y > p2.y }
+        ldy #0
+        lda is_drawing_window_2
+        beq :+
+            iny
+            iny
+            iny
+            iny
+        :
         lda p1y
         cmp p2y
         bcc :+
-            lda #1
-            sta is_drawing_up
+            iny
+            iny
         :
+        lda is_drawing_right_side_tab, y
+        sta is_drawing_right_side
 
-        ; set dest_addr
+        ; dda::dest_addr = &whW_data_B, where W = one of [0,1,2,3] and B = one of [0,1]
+        ldy #0
         lda counter
         lsr
-        bcs setDestOdd
-        ;setDestEven:
-            lda is_drawing_up
-            bne :+
-                lda #wh0_data_0
-                bra setDestEnd
-            :
-                lda #wh1_data_0
-                bra setDestEnd
-        setDestOdd:
-            lda is_drawing_up
-            bne :+
-                lda #wh0_data_1
-                bra setDestEnd
-            :
-                lda #wh1_data_1
-                bra setDestEnd
-        setDestEnd:
+        bcc :+
+            ldy #8
+        :
+        lda is_drawing_window_2
+        beq :+
+            iny
+            iny
+            iny
+            iny
+        :
+        lda is_drawing_right_side
+        beq :+
+            iny
+            iny
+        :
+        lda dest_addr_tab, y
         sta dda::dest_addr
-
-        phx
-
+        
+        ; dda(p1, p2)
         lda p2y
         pha
         lda p2x
@@ -435,221 +560,50 @@ one: .byte 1
         lda p1y
         pha
         lda p1x
-        jsr window::dda
+        jsr dda
         pla
         pla
         pla
 
-        ; next:
-        pla
-        cmp highest_inner_index
+        ; next
+        ldx next_star_point_ind
+        cpx lowest_inner_index
         beq loopEnd
-        clc
-        adc #4
-        cmp #10 * 4
-        bcc :+
-            lda #0
-        :
-        tax
         jmp loop
     loopEnd:
 
+    lda is_drawing_window_2
+    bne :+
+        inc is_drawing_window_2
+        lda #mi(4)
+        sta star_point_inc_amt
+        ldx lowest_inner_index
+        wdm 0
+        jmp loop
+    :
+
+    window_moveUpperWhHalvesUp
     a8
+    window_setMiddleInfoBytes
 
     lda counter
     lsr
     bcs :+
         dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_0
         dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_0
-        lda #%110
+        dmaSet 3, WH2, DMAP_1REG_1WR, wh2_table_0
+        dmaSet 4, WH3, DMAP_1REG_1WR, wh3_table_0
         bra :++
     :
         dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_1
         dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_1
-        lda #%110
+        dmaSet 3, WH2, DMAP_1REG_1WR, wh2_table_1
+        dmaSet 4, WH3, DMAP_1REG_1WR, wh3_table_1
     :
 
-    lda #%110
+    lda #%11110
     sta HDMAEN
 
-    rts
-.endproc
-
-
-; I am not going to use this function anymore as it is way too expensive; I was only able to draw about 4 1/2 lines on a medium-sized star per frame.
-; I will, however, keep it here for prosperity's sake
-; in:
-    ; A:16 = p1.x
-    ; SP+3 = p1.y
-    ; SP+5 = p2.x
-    ; SP+7 = p2.y
-.a16
-.i16
-.proc bresenham
-    localVars
-    var p1x, 2
-    var p2x, 2
-    var p1y, 2
-    var p2y, 2
-    var dx,  2
-    var dy,  2
-    var sx,  2
-    var sy,  2
-    var err, 2
-    var cx,  2
-    var cy,  2
-
-    ; set p1, p2 and c
-    sta p1x
-    sta cx
-    lda 3, s
-    sta p1y
-    sta cy
-    lda 5, s
-    sta p2x
-    lda 7, s
-    sta p2y
-
-    ; info byte
-    a8
-    lda #$80 | 127
-    sta wh0_table_0
-    sta wh1_table_0
-    lda #$80 | (224 - 127)
-    sta wh0_data_0 + 127
-    sta wh1_data_0 + 127
-    a16
-
-    ; dx = abs(p2.x - p1.x)
-    lda p2x
-    sec
-    sbc p1x
-    abs
-    sta dx
-    
-    ; dy = -abs(p2.y - p1.y)
-    lda p2y
-    sec
-    sbc p1y
-    abs
-    neg
-    sta dy
-
-    ; sx = p1.x < p2.x ? 1 : -1
-    lda #1
-    sta sx
-    lda p1x
-    cmp p2x
-    bmi :+
-        lda #mi(1)
-        sta sx
-    :
-    
-    ; sy = p1.y < p2.y ? 1 : -1
-    lda #1
-    sta sy
-    lda p1y
-    cmp p2y
-    bmi :+
-        lda #mi(1)
-        sta sy
-    :
-
-    ; err = dx + dy
-    lda dx
-    clc
-    adc dy
-    sta err
-
-    ; num_pixels = max(dx, -dy)
-    lda dx
-    tax
-    lda dy
-    neg
-    cmp dx
-    bmi :+
-        tax
-    :
-    inx
-    ; for (0..num_pixels)
-    loop:
-        ; TODO bounds check
-        ; set pixel
-        ldy cy
-        cpy #127
-        bcc :+
-            iny ; skip over the info byte in the middle
-        :
-        a8
-        lda is_drawing_up
-        beq drawWh0
-        ;drawWh1:
-            lda cx
-            sta wh1_data_0, y
-            bra drawEnd
-        drawWh0:
-            lda cx
-            sta wh0_data_0, y
-            lda #255
-            sta wh1_data_0, y
-        drawEnd:
-        a16
-
-        ; e2 = err * 2
-        var e2, 2
-        lda err
-        asl
-        sta e2
-
-        ; if e2 >= dy
-        ; lda e2
-        cmp dy
-        bmi xMoveEnd
-            ; if c.x == p2.x then break
-            lda cx
-            cmp p2x
-            beq loopEnd
-
-            ; err += dy
-            lda err
-            clc
-            adc dy
-            sta err
-
-            ; cx += sx
-            lda cx
-            clc
-            adc sx
-            sta cx
-        xMoveEnd:
-
-        ; if e2 <= dx
-        lda e2
-        cmp dx
-        beq yMove
-        bpl yMoveEnd
-        yMove:
-            ; if c.y == p2.y then break
-            lda cy
-            cmp p2y
-            beq loopEnd
-            
-            ; err += dx
-            lda err
-            clc
-            adc dx
-            sta err
-
-            lda cy
-            clc
-            adc sy
-            sta cy
-        yMoveEnd:
-
-        dex
-        bne loop
-    loopEnd:
-    
     rts
 .endproc
 

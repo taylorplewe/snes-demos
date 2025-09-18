@@ -51,7 +51,7 @@ forever:
     	lsr a
     	bcs waitForInput
 
-    jsr window::update
+    jsr window::drawStar
 
     inc nmi_ready
     wai
