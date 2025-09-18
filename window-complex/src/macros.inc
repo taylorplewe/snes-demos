@@ -84,6 +84,26 @@
         sta MDMAEN ; run it
     .endmacro
 
+    .a8
+    .i16
+    .macro hdmaSet chan, reg, dmap, src, indirect_addr
+        .local CHANOFFS
+        CHANOFFS = chan * $10
+
+        lda #dmap
+        sta DMAP0 +CHANOFFS
+        ldx #.loword(src)
+        stx A1T0L +CHANOFFS
+        lda #^src
+        sta A1B0 +CHANOFFS
+        lda #<reg
+        sta BBAD0 +CHANOFFS
+        .ifnblank indirect_addr
+        lda #^indirect_addr
+        sta DASB0 +CHANOFFS
+        .endif
+    .endmacro
+
     ; set all bytes of a memory block to 0
     .a8
     .i16

@@ -51,6 +51,7 @@ forever:
     	lsr a
     	bcs waitForInput
 
+    wdm 0
     jsr window::drawStar
 
     inc nmi_ready

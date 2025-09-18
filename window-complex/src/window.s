@@ -9,8 +9,7 @@
 ; the following code allocates (226*8) = 1,808 bytes in total.
 .repeat 2, buffer_ind
     .repeat 4, window_reg_ind
-        .ident(.sprintf("wh%d_table_%d", window_reg_ind, buffer_ind)): .res 1
-        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224 + 1
+        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224
     .endrepeat
 .endrepeat
 
@@ -28,6 +27,17 @@ highest_inner_index:  .res 2
 two: .byte 2
 one: .byte 1
 
+.repeat 2, buffer_ind
+    .repeat 4, window_reg_ind
+        .ident(.sprintf("wh%d_hdma_table_%d", window_reg_ind, buffer_ind)):
+            .byte $80 | 112
+            .addr .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind))
+            .byte $80 | 112
+            .addr .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)) + 112
+            .byte 0
+    .endrepeat
+.endrepeat
+
 .code
 
 .a8
@@ -39,15 +49,6 @@ one: .byte 1
     sta WBGLOG
     lda #TMSW_BG1
     sta TMW
-
-    ; set up hdma
-    ; first info NLTRx info byte
-    lda #$80 | 127
-    .repeat 2, buffer_ind
-        .repeat 4, window_reg_ind
-            sta .ident(.sprintf("wh%d_table_%d", window_reg_ind, buffer_ind))
-        .endrepeat
-    .endrepeat
 
     .macro setStarPoint x_val, y_val
         lda #x_val
@@ -328,63 +329,29 @@ one: .byte 1
     bcs :+
         ldx #wh0_data_0
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224
         ldx #wh1_data_0
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224
         ldx #wh2_data_0
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224
         ldx #wh3_data_0
         bra :++
     :
         ldx #wh0_data_1
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224
         ldx #wh1_data_1
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224
         ldx #wh2_data_1
         stx WMADDL
-        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224 + 1
+        dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, two, 224
         ldx #wh3_data_1
     :
     stx WMADDL
-    dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224 + 1
-.endmacro
-
-.a16
-.i16
-.macro window_moveUpperWhHalvesUp
-    lda counter
-    lsr
-    bcs :+
-        .repeat 4, i
-            lda #(224-127) - 1
-            ldx #.ident(.sprintf("wh%d_data_0", i)) + 223
-            ldy #.ident(.sprintf("wh%d_data_0", i)) + 224
-            mvp 0,0
-        .endrepeat
-        bra :++
-    :
-        .repeat 4, i
-            lda #(224-127) - 1
-            ldx #.ident(.sprintf("wh%d_data_1", i)) + 223
-            ldy #.ident(.sprintf("wh%d_data_1", i)) + 224
-            mvp 0,0
-        .endrepeat
-    :
-.endmacro
-
-.a8
-.i16
-.macro window_setMiddleInfoBytes
-    lda #$80 | (224 - 127)
-    .repeat 2, buffer_ind
-        .repeat 4, window_reg_ind
-            sta .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)) + 127
-        .endrepeat
-    .endrepeat
+    dma 0, WMDATA, DMAP_1REG_1WR | DMAP_FIXED_SOURCE, one, 224
 .endmacro
 
 .a16
@@ -572,24 +539,22 @@ dest_addr_tab:
         jmp loop
     :
 
-    window_moveUpperWhHalvesUp
     a8
-    window_setMiddleInfoBytes
 
     ; set up DMA for next buffer
     lda counter
     lsr
     bcs :+
-        dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_0
-        dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_0
-        dmaSet 3, WH2, DMAP_1REG_1WR, wh2_table_0
-        dmaSet 4, WH3, DMAP_1REG_1WR, wh3_table_0
+        hdmaSet 1, WH0, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh0_hdma_table_0, wh0_data_0
+        hdmaSet 2, WH1, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh1_hdma_table_0, wh1_data_0
+        hdmaSet 3, WH2, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh2_hdma_table_0, wh2_data_0
+        hdmaSet 4, WH3, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh3_hdma_table_0, wh3_data_0
         bra :++
     :
-        dmaSet 1, WH0, DMAP_1REG_1WR, wh0_table_1
-        dmaSet 2, WH1, DMAP_1REG_1WR, wh1_table_1
-        dmaSet 3, WH2, DMAP_1REG_1WR, wh2_table_1
-        dmaSet 4, WH3, DMAP_1REG_1WR, wh3_table_1
+        hdmaSet 1, WH0, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh0_hdma_table_1, wh0_data_1
+        hdmaSet 2, WH1, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh1_hdma_table_1, wh1_data_1
+        hdmaSet 3, WH2, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh2_hdma_table_1, wh2_data_1
+        hdmaSet 4, WH3, DMAP_1REG_1WR | DMAP_HDMA_INDIRECT, wh3_hdma_table_1, wh3_data_1
     :
     lda #%11110
     sta HDMAEN
