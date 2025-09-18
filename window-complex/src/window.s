@@ -89,28 +89,28 @@ one: .byte 1
     var p2x,          2
     var p1y,          2
     var p2y,          2
-    var cx,           2 ; 8:8 fixed point
-    var cy,           2
+    var curr_pos,     2 ; current 8:8 fixed position of the SHORTER axis of the two (the other just inc's or dec's by 1 each iteration)
     var xdiff,        1
     var ydiff,        1
     var is_xdiff_neg, 2 ; bool
     var is_ydiff_neg, 2
-    var xadd,         2 ; 8:8 fixed point
-    var yadd,         2
+    var inc_amount,   2 ; amount to add to curr_pos each iteration
     var dest_addr,    2
+
+    stz is_xdiff_neg
+    stz is_ydiff_neg
 
     ; set p1, p2 and c
     sta p1x
     lda 3, s
     sta p1y
-    lda 5, s
-    sta p2x
     lda 7, s
     sta p2y
+    lda 5, s
+    sta p2x
 
     ; xdiff = abs(p2.x - p1.x)
-    stz is_xdiff_neg
-    lda p2x
+    ; lda p2x
     sec
     sbc p1x
     php
@@ -123,7 +123,6 @@ one: .byte 1
     a16
 
     ; ydiff = abs(p2.y - p1.y)
-    stz is_ydiff_neg
     lda p2y
     sec
     sbc p1y
@@ -146,14 +145,14 @@ one: .byte 1
         tax ; if xdiff is 7, X:16 = $700
         lda ydiff
         div
-        stx xadd
+        stx inc_amount
 
         lda is_xdiff_neg
         beq :+
             a16
             txa
             neg
-            sta xadd
+            sta inc_amount
             a8
         :
 
@@ -177,14 +176,14 @@ one: .byte 1
         tax ; if ydiff is 7, X:16 = $700
         lda xdiff
         div
-        stx yadd
+        stx inc_amount
 
         lda is_ydiff_neg
         beq :+
             a16
             txa
             neg
-            sta yadd
+            sta inc_amount
             a8
         :
 
@@ -208,13 +207,13 @@ one: .byte 1
     xba
     lda #$80
     tay
-    sty cy
+    sty curr_pos
     ai8
     lda p1x
     pha
     xIncLoop:
         ; plot pixel
-        ldy cy + 1
+        ldy curr_pos + 1
         a8
         pla
         sta (dest_addr), y
@@ -222,10 +221,10 @@ one: .byte 1
         pha
         a16
 
-        lda cy
+        lda curr_pos
         clc
-        adc yadd
-        sta cy
+        adc inc_amount
+        sta curr_pos
 
         dex
         bne xIncLoop
@@ -241,13 +240,13 @@ one: .byte 1
     xba
     lda #$80
     tay
-    sty cy
+    sty curr_pos
     ai8
     lda p1x
     pha
     xDecLoop:
         ; plot pixel
-        ldy cy + 1
+        ldy curr_pos + 1
         a8
         pla
         sta (dest_addr), y
@@ -255,10 +254,10 @@ one: .byte 1
         pha
         a16
 
-        lda cy
+        lda curr_pos
         clc
-        adc yadd
-        sta cy
+        adc inc_amount
+        sta curr_pos
 
         dex
         bne xDecLoop
@@ -271,14 +270,10 @@ one: .byte 1
     .i16
     yIncBeforeLoop:
     ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
-    lda p1x
-    xba
     lda #$80
-    tay
-    sty cx
-    i8
-    lda cx
     xba
+    lda p1x
+    i8
     ldy p1y
     yIncLoop:
         ; plot pixel
@@ -289,7 +284,7 @@ one: .byte 1
 
         xba
         clc
-        adc xadd
+        adc inc_amount
         xba
 
         dex
@@ -301,14 +296,10 @@ one: .byte 1
     .i16
     yDecBeforeLoop:
     ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
-    lda p1x
-    xba
     lda #$80
-    tay
-    sty cx
-    i8
-    lda cx
     xba
+    lda p1x
+    i8
     ldy p1y
     yDecLoop:
         ; plot pixel
@@ -319,7 +310,7 @@ one: .byte 1
 
         xba
         clc
-        adc xadd
+        adc inc_amount
         xba
 
         dex
@@ -578,7 +569,6 @@ dest_addr_tab:
         lda #mi(4)
         sta star_point_inc_amt
         ldx lowest_inner_index
-        wdm 0
         jmp loop
     :
 
@@ -586,6 +576,7 @@ dest_addr_tab:
     a8
     window_setMiddleInfoBytes
 
+    ; set up DMA for next buffer
     lda counter
     lsr
     bcs :+
@@ -600,7 +591,6 @@ dest_addr_tab:
         dmaSet 3, WH2, DMAP_1REG_1WR, wh2_table_1
         dmaSet 4, WH3, DMAP_1REG_1WR, wh3_table_1
     :
-
     lda #%11110
     sta HDMAEN
 
