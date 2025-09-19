@@ -62,16 +62,29 @@ one: .byte 1
 
     ldy #0
     a16
-    setStarPoint 128,  38
-    setStarPoint 111,  89
-    setStarPoint  57,  91
-    setStarPoint 100, 124
-    setStarPoint  85, 176
-    setStarPoint 128, 146
-    setStarPoint 170, 176
-    setStarPoint 155, 124
-    setStarPoint 197,  91
-    setStarPoint 144,  89
+    ; pointier, smaller, right-side-up star
+    ; setStarPoint 128,  38
+    ; setStarPoint 111,  89
+    ; setStarPoint  57,  91
+    ; setStarPoint 100, 124
+    ; setStarPoint  85, 176
+    ; setStarPoint 128, 146
+    ; setStarPoint 170, 176
+    ; setStarPoint 155, 124
+    ; setStarPoint 197,  91
+    ; setStarPoint 144,  89
+
+    ; fatter, bigger, turned star
+    setStarPoint 142, 221
+    setStarPoint 164, 147
+    setStarPoint 240, 123
+    setStarPoint 176,  80
+    setStarPoint 177,   2
+    setStarPoint 114,  49
+    setStarPoint  40,  24
+    setStarPoint  65,  97
+    setStarPoint  18, 159
+    setStarPoint  97, 158
     a8
     
     rts
