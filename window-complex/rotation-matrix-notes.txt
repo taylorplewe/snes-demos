@@ -1,0 +1,93 @@
+p = {x, y}
+
+X = (cos*p.x) + (-sin*p.y)
+Y = (sin*p.x) + (cos*p.y)
+
+cos(0.1) = .99
+sin(0.1) = .10
+
+p = { 2, -80 }
+
+p' = {
+	x = (.99*2) + (-.10*-80)
+	  = 1 + 8
+	  = 9
+	y = (.10*2) + (.99*-80)
+	  = 0 - 79
+	  = -79
+} = { 9, -79 }
+
+step 2
+p' = {
+	x = (.99*9) + (-.10*-79)
+	  = 8 + 7
+	  = 15
+	y = (.10*9) + (.99*-79)
+	  = 0 - 78
+	  = -78
+} = { 15, -78 }
+
+sintab = 0:16 fixed point
+
+p.x = $86
+localized based on origin = $06
+
+sin = $0647
+nsin = $f9b9
+cos = $7f62
+
+new (localized) x = ??
+
+
+$02 --> $09
+
+(?? * $02) + (?? * $b0) = $09
+(?? * $02) = $01
+(?? * $b0) = $08
+
+
+$0200 * $fd
+
+022
+
+
+cos = .99 = $00fd
+sin = .10 = $0019
+nsin = -.10 = $ffe7
+
+x = $02 (2)
+y = $b0 (-80)
+    $50 (+80)
+
+Just remember the signs of everything, and do absolute value math and apply the signs at the end lmao
+
+The sign of the end result = the sign of factor 1 XOR the sign of factor 2
+
+$02 * $fd = $01fa, >> 8 = $01 (pos * pos = pos)
+$50 * $19 = $07d0, >> 8 = $07 (neg * neg = pos)
+new x = $01 + $07 = $08, close enough to 9 :shrug:
+
+
+$02 * $19 = $0032, >> 8 = $00 (pos * pos = pos)
+$50 * $fd = $4f10, >> 8 = $4f (pos * neg = neg) -> $b1 = -79!
+new y = $00 + $b1 = $b1 = -79
+
+{ 8, -79 } (close enough to { 9, -79 } for me)
+
+
+------
+
+cos: cos(0.5) = 0.877583 -> * 256 = 225
+  = $00e1
+sin: sin(0.5) = 0.479426 -> * 256 = 123
+  = $007b
+-sin: -0.479426 -> * 256 = -123
+  = $ff85
+
+{ 0, -80 } = { $00, $b0 }
+	($00 * $00e1 = $00) + ($b0 * $ff85 = $26) = $26 = 38
+	($00 * $007b = $00) + ($b0 * $00e1 = $b9) = $b9 = -71
+{ 38, -71 } = { $26, $b9 }
+	($26 * $00e1 = $21) + ($b9 * $ff85 = $22) = $43 = 67
+	($26 * $007b = $12) + ($b9 * $00e1 = $c1) = $d3 = -45
+{ 67, -45 } = { $43, $d3 }

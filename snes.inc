@@ -433,6 +433,7 @@ MPYH			= $2136 ; Multiplication Result Registers
 ; $2135 r m+++?
 ; $2136 r h+++?
 ;         xxxxxxxx xxxxxxxx xxxxxxxx
+; This is the 2's compliment product of the 16-bit value written to $211B (M7A) and the 8-bit value most recently written to $211C (M7B). There is supposedly no important delay. It may not be operative during Mode 7 rendering.
 SLHV			= $2137 ; Software Latch Register
 OAMDATAREAD		= $2138 ; OAM Data Read Register
 VMDATALREAD		= $2139 ; VRAM Data Read Register (Low)

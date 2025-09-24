@@ -4,6 +4,7 @@
 .include "src/header.inc"
 .include "../snes.inc"
 .include "src/macros.inc"
+.include "src/common.s"
 
 .include "src/ppu.s"
 .include "src/window.s"
@@ -51,8 +52,7 @@ forever:
     	lsr a
     	bcs waitForInput
 
-    wdm 0
-    jsr window::drawStar
+    jsr window::update
 
     inc nmi_ready
     wai

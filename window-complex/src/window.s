@@ -5,8 +5,6 @@
 ; double buffering is needed so the code that's writing to these
 ; tables doesn't interfere with the HDMA which is reading what's
 ; there currently (generated last frame)
-;
-; the following code allocates (226*8) = 1,808 bytes in total.
 .repeat 2, buffer_ind
     .repeat 4, window_reg_ind
         .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224
@@ -20,6 +18,8 @@ star_point_inc_amt:   .res 2 ; what to add to X register to get next point to ch
 next_star_point_ind:  .res 2
 lowest_inner_index:   .res 2 ; for splitting the star down the middle and drawing 2 windows
 highest_inner_index:  .res 2
+
+theta:                .res 1
 
 
 .rodata
@@ -50,15 +50,15 @@ one: .byte 1
     lda #TMSW_BG1
     sta TMW
 
-    .macro setStarPoint x_val, y_val
-        lda #x_val
-        sta star_points, y
-        lda #y_val
-        sta star_points+2, y
-        .repeat 4
-            iny
-        .endrepeat
-    .endmacro
+    ; .macro setStarPoint x_val, y_val
+    ;     lda #x_val
+    ;     sta star_points, y
+    ;     lda #y_val
+    ;     sta star_points+2, y
+    ;     .repeat 4
+    ;         iny
+    ;     .endrepeat
+    ; .endmacro
 
     ldy #0
     a16
@@ -75,18 +75,97 @@ one: .byte 1
     ; setStarPoint 144,  89
 
     ; fatter, bigger, turned star
-    setStarPoint 142, 221
-    setStarPoint 164, 147
-    setStarPoint 240, 123
-    setStarPoint 176,  80
-    setStarPoint 177,   2
-    setStarPoint 114,  49
-    setStarPoint  40,  24
-    setStarPoint  65,  97
-    setStarPoint  18, 159
-    setStarPoint  97, 158
+    ; setStarPoint 142, 221
+    ; setStarPoint 164, 147
+    ; setStarPoint 240, 123
+    ; setStarPoint 176,  80
+    ; setStarPoint 177,   2
+    ; setStarPoint 114,  49
+    ; setStarPoint  40,  24
+    ; setStarPoint  65,  97
+    ; setStarPoint  18, 159
+    ; setStarPoint  97, 158
     a8
+
+    rts
+.endproc
+
+
+.a8
+.i16
+.macro window_setStarPoints
+    .local loop
+    localVars
+    var curr_theta, 1
     
+    ; generate points, starting with theta, and increasing the degree by 256/10 for 10 points
+    lda theta
+    sta curr_theta
+    ldy #0
+    loop:
+        ; point = { sin(curr_theta) * scale, cos(curr_theta) * scale }
+        lda curr_theta
+        jsr sin
+        xba
+        sta M7B
+        tya
+        and #%100
+        beq :+
+            lda #$40
+            bra :++
+        :
+            lda #$80
+        :
+        sta M7A
+        stz M7A
+        lda MPYM
+        clc
+        adc #128
+        sta star_points, y
+
+        lda curr_theta
+        jsr cos
+        xba
+        sta M7B
+        tya
+        and #%100
+        beq :+
+            lda #$40
+            bra :++
+        :
+            lda #$80
+        :
+        sta M7A
+        stz M7A
+        lda MPYM
+        pha
+        lda #112
+        sec
+        sbc 1, s
+        sta star_points+2, y
+        pla
+
+        ; next
+        lda curr_theta
+        sec
+        sbc #26 ; 256/10 = 25.6, rounded
+        sta curr_theta
+        iny
+        iny
+        iny
+        iny
+        cpy #10 * 2 * 2 ; last point
+        bcc loop
+    inc theta
+.endmacro
+
+.a8
+.i16
+.proc update
+    wdm 0
+    window_setStarPoints
+    wdm 0
+    jsr drawStar
     rts
 .endproc
 
