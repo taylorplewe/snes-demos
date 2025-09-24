@@ -20,6 +20,7 @@ lowest_inner_index:   .res 2 ; for splitting the star down the middle and drawin
 highest_inner_index:  .res 2
 
 theta:                .res 1
+scale:                .res 1
 
 
 .rodata
@@ -50,54 +51,81 @@ one: .byte 1
     lda #TMSW_BG1
     sta TMW
 
-    ; .macro setStarPoint x_val, y_val
-    ;     lda #x_val
-    ;     sta star_points, y
-    ;     lda #y_val
-    ;     sta star_points+2, y
-    ;     .repeat 4
-    ;         iny
-    ;     .endrepeat
-    ; .endmacro
-
-    ldy #0
-    a16
-    ; pointier, smaller, right-side-up star
-    ; setStarPoint 128,  38
-    ; setStarPoint 111,  89
-    ; setStarPoint  57,  91
-    ; setStarPoint 100, 124
-    ; setStarPoint  85, 176
-    ; setStarPoint 128, 146
-    ; setStarPoint 170, 176
-    ; setStarPoint 155, 124
-    ; setStarPoint 197,  91
-    ; setStarPoint 144,  89
-
-    ; fatter, bigger, turned star
-    ; setStarPoint 142, 221
-    ; setStarPoint 164, 147
-    ; setStarPoint 240, 123
-    ; setStarPoint 176,  80
-    ; setStarPoint 177,   2
-    ; setStarPoint 114,  49
-    ; setStarPoint  40,  24
-    ; setStarPoint  65,  97
-    ; setStarPoint  18, 159
-    ; setStarPoint  97, 158
-    a8
-
+    lda #05
+    sta scale
     rts
 .endproc
 
+; inner points must reach corners of screen for star to disappear
+; 
+;    /|
+;  x/ | 112
+;  /  |
+; _____
+;  128
+; x = sqrt(112^2 + 128^2) ~= 170
+; highest value from sintab = $7f = 127
+; 1.0 in fixed point = $100 = 256
+; (170/127) * 256 = 343 ($157)
+; $1.57 is what to scale the max sintab val in order to reach corner of screen
+; what about outer?
+; I've found that $0.80 for outer and $0.50 for inner produced a nice-looking star.
+; $80 (128) / $50 (80) = 1.6
+; 1.6 * 343 ~= 549 ($225)
+;
+; so maximum OUTER scale is $2.25 and maxiumum INNER scale is $1.57
+; 
+; both these numbers are 8.8 fixed point
+; SCALE_MAX_OUTER = $225 ; 549
+; SCALE_MAX_INNER = $157 ; 343
+SCALE_MAX_INNER = (170/127) * 256
+SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
+
+; each update loop:
+;   1. calculate the scales of OUTER and INNER star points by max scale * current scale
+;     example:
+;     $0225    $0157  | SCALE_MAX
+;   x  $.10  x  $.10  | scale
+;   -------  -------
+;     $0022    $0015  | curr_scale
+;    
+;   2. then for each point:
+;     1. get the cos and sin values for this point
+;     2. multiply those values by OUTER or INNER scale, depending
+;       example:
+;       $0022    $0015 | curr_scale
+;     x   $7f  x   $00 | cos or sin
+;     -------  -------
+;         $10      $00 | values for matrix math
 
 .a8
 .i16
 .macro window_setStarPoints
     .local loop
     localVars
-    var curr_theta, 1
-    
+    var curr_theta,  1
+    var inner_scale, 2
+    var outer_scale, 2
+
+    ; calculate inner_scale and outer_scale
+    lda #<SCALE_MAX_INNER
+    sta M7A
+    lda #>SCALE_MAX_INNER
+    sta M7A
+    lda scale
+    sta M7B
+    ldx MPYM
+    stx inner_scale
+
+    lda #<SCALE_MAX_OUTER
+    sta M7A
+    lda #>SCALE_MAX_OUTER
+    sta M7A
+    lda scale
+    sta M7B
+    ldx MPYM
+    stx outer_scale
+
     ; generate points, starting with theta, and increasing the degree by 256/10 for 10 points
     lda theta
     sta curr_theta
@@ -110,14 +138,17 @@ one: .byte 1
         sta M7B
         tya
         and #%100
+        a16
         beq :+
-            lda #$40
+            lda inner_scale
             bra :++
         :
-            lda #$80
+            lda outer_scale
         :
+        a8
         sta M7A
-        stz M7A
+        xba
+        sta M7A
         lda MPYM
         clc
         adc #128
@@ -129,14 +160,17 @@ one: .byte 1
         sta M7B
         tya
         and #%100
+        a16
         beq :+
-            lda #$40
+            lda inner_scale
             bra :++
         :
-            lda #$80
+            lda outer_scale
         :
+        a8
         sta M7A
-        stz M7A
+        xba
+        sta M7A
         lda MPYM
         pha
         lda #112
@@ -162,9 +196,23 @@ one: .byte 1
 .a8
 .i16
 .proc update
-    wdm 0
+    a16
+    lda JOY1L
+    bit #JOY_U
+    bne scaleU
+    bit #JOY_D
+    beq scaleEnd
+    ;scaleD:
+        a8
+        dec scale
+        bra scaleEnd
+    scaleU:
+        a8
+        inc scale
+    scaleEnd:
+    a8
+
     window_setStarPoints
-    wdm 0
     jsr drawStar
     rts
 .endproc
