@@ -1,5 +1,5 @@
 ; I am not going to use this function anymore as it is way too expensive; I was only able to draw about 4 1/2 lines on a medium-sized star per frame.
-; I will, however, keep it here for prosperity's sake
+; That being said I will keep it here for prosperity's sake
 ; in:
     ; A:16 = p1.x
     ; SP+3 = p1.y

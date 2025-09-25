@@ -7,7 +7,7 @@
 ; there currently (generated last frame)
 .repeat 2, buffer_ind
     .repeat 4, window_reg_ind
-        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224
+        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 256 ; even though there's 224 scanlines, allocating 256 makes the writing loop (which must be fully optimized) much easier to bounds check
     .endrepeat
 .endrepeat
 
@@ -56,7 +56,7 @@ one: .byte 1
     rts
 .endproc
 
-; inner points must reach corners of screen for star to disappear
+; inner points must reach corners of screen for star to fully disappear
 ; 
 ;    /|
 ;  x/ | 112
@@ -69,34 +69,29 @@ one: .byte 1
 ; (170/127) * 256 = 343 ($157)
 ; $1.57 is what to scale the max sintab val in order to reach corner of screen
 ; what about outer?
-; I've found that $0.80 for outer and $0.50 for inner produced a nice-looking star.
-; $80 (128) / $50 (80) = 1.6
-; 1.6 * 343 ~= 549 ($225)
-;
-; so maximum OUTER scale is $2.25 and maxiumum INNER scale is $1.57
+; I've found that $0.80 for outer and $0.40 for inner produced a nice-looking star.
+; multiply ($0.80 / $0.40) by 343 to get the max outer scale
 ; 
 ; both these numbers are 8.8 fixed point
-; SCALE_MAX_OUTER = $225 ; 549
-; SCALE_MAX_INNER = $157 ; 343
 SCALE_MAX_INNER = (170/127) * 256
 SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
 
 ; each update loop:
-;   1. calculate the scales of OUTER and INNER star points by max scale * current scale
+;   1. calculate the scales of OUTER and INNER star points by (max scale) * ('scale' var)
 ;     example:
-;     $0225    $0157  | SCALE_MAX
+;     $02ae    $0157  | SCALE_MAX
 ;   x  $.10  x  $.10  | scale
 ;   -------  -------
-;     $0022    $0015  | curr_scale
+;     $002a    $0015  | curr_scale
 ;    
 ;   2. then for each point:
 ;     1. get the cos and sin values for this point
 ;     2. multiply those values by OUTER or INNER scale, depending
 ;       example:
-;       $0022    $0015 | curr_scale
+;       $002a    $0015 | curr_scale
 ;     x   $7f  x   $00 | cos or sin
 ;     -------  -------
-;         $10      $00 | values for matrix math
+;         $14      $00 | values for matrix math
 
 .a8
 .i16
@@ -210,6 +205,18 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
         a8
         inc scale
     scaleEnd:
+    a16
+    lda JOY1L
+    bit #JOY_L
+    bne rotL
+    bit #JOY_R
+    bne rotR
+    beq rotEnd
+    rotL:
+
+        bra rotEnd
+    rotR:
+    rotEnd:
     a8
 
     window_setStarPoints
@@ -236,12 +243,13 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     var is_xdiff_neg, 2 ; bool
     var is_ydiff_neg, 2
     var inc_amount,   2 ; amount to add to curr_pos each iteration
-    var dest_addr,    2
+    var dest_addr,    2 ; param
+    var is_in_bounds, 1 ; param
 
     stz is_xdiff_neg
     stz is_ydiff_neg
 
-    ; set p1, p2 and c
+    ; set p1, p2
     sta p1x
     lda 3, s
     sta p1y
@@ -306,9 +314,9 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
 
         lda is_ydiff_neg
         bne :+
-            jmp yIncBeforeLoop
+            jmp yIncPreLoop
         :
-        jmp yDecBeforeLoop
+        jmp yDecPreLoop
     xDiffGreater:
         ; yadd = ydiff / xdiff
         lda ydiff
@@ -336,14 +344,14 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
         inx ; draw last pixel too
 
         lda is_xdiff_neg
-        bne xDecBeforeLoop
-        ;bra xIncBeforeLoop
+        bne xDecPreLoop
+        ;bra xIncPreLoop
     end:
 
     .a8
     .i16
-    xIncBeforeLoop:
-    ; cy = (p1y << 8) + $80 (.5) (so as to be "in the middle of the pixel")
+    xIncPreLoop:
+    ; cy = ((p1y << 8) & $ff00) + $80 (.5) (so as to be "in the middle of the pixel")
     lda p1y
     xba
     lda #$80
@@ -352,6 +360,30 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     ai8
     lda p1x
     pha
+    lda is_in_bounds
+    bne xIncLoop
+    xIncCheckLoop:
+        ; plot pixel
+        ldy curr_pos + 1
+        beq end1
+        a8
+        pla
+        sta (dest_addr), y
+        inc
+        pha
+        a16
+
+        lda curr_pos
+        clc
+        adc inc_amount
+        sta curr_pos
+
+        dex
+        bne xIncCheckLoop
+    plx
+    end1:
+    ai16
+    rts
     xIncLoop:
         ; plot pixel
         ldy curr_pos + 1
@@ -369,13 +401,11 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
 
         dex
         bne xIncLoop
-    plx
-    ai16
-    rts
+    bra xEnd
 
     .a8
     .i16
-    xDecBeforeLoop:
+    xDecPreLoop:
     ; cy = (p1y << 8) + $80 (.5)
     lda p1y
     xba
@@ -385,6 +415,30 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     ai8
     lda p1x
     pha
+    lda is_in_bounds
+    bne xDecLoop
+    xDecCheckLoop:
+        ; plot pixel
+        ldy curr_pos + 1
+        beq end1
+        a8
+        pla
+        sta (dest_addr), y
+        dec
+        pha
+        a16
+
+        lda curr_pos
+        clc
+        adc inc_amount
+        sta curr_pos
+
+        dex
+        bne xDecCheckLoop
+    xEnd:
+    plx
+    ai16
+    rts
     xDecLoop:
         ; plot pixel
         ldy curr_pos + 1
@@ -402,21 +456,43 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
 
         dex
         bne xDecLoop
-    xEnd:
-    plx
-    ai16
-    rts
+    bra xEnd
 
     .a8
     .i16
-    yIncBeforeLoop:
+    yIncPreLoop:
     ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
     lda #$80
     xba
     lda p1x
     i8
+    ldy is_in_bounds
+    bne yIncLoop
+    yIncCheckLoop:
     ldy p1y
+        @loop:
+        ; plot pixel
+        a8
+        sta (dest_addr), y
+        a16
+        iny
+        beq end2
+
+        xba
+        clc
+        adc inc_amount
+        xba
+
+        dex
+        bne @loop
+    end2:
+    ai16
+    rts
+    .a16
+    .i8
     yIncLoop:
+    ldy p1y
+        @loop:
         ; plot pixel
         a8
         sta (dest_addr), y
@@ -429,20 +505,46 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
         xba
 
         dex
-        bne yIncLoop
-    ai16
-    rts
+        bne @loop
+    bra yEnd
 
     .a8
     .i16
-    yDecBeforeLoop:
-    ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
+    yDecPreLoop:
+    ; cx = ((p1x << 8) & $ff00) + $80 (.5) (so as to be "in the middle of the pixel")
     lda #$80
     xba
     lda p1x
     i8
+    ldy is_in_bounds
+    bne yDecLoop
+    yDecCheckLoop:
     ldy p1y
+        @loop:
+        ; plot pixel
+        a8
+        sta (dest_addr), y
+        a16
+        dey
+        beq end2
+        ; beq exit
+
+        xba
+        clc
+        adc inc_amount
+        xba
+        ; beq yDecZeroLoop
+
+        dex
+        bne @loop
+    yEnd:
+    ai16
+    rts
+    .a16
+    .i8
     yDecLoop:
+    ldy p1y
+        @loop:
         ; plot pixel
         a8
         sta (dest_addr), y
@@ -455,9 +557,8 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
         xba
 
         dex
-        bne yDecLoop
-    ai16
-    rts
+        bne @loop
+    bra yEnd
 .endproc
 
 .a8
@@ -628,6 +729,39 @@ dest_addr_tab:
         lda is_drawing_right_side_tab, y
         sta is_drawing_right_side
 
+        ; if p1 is out of bounds (screen space) and p2 isn't, swap p1 and p2
+        ; p1 outside bounds?
+        a8
+        lda #1
+        sta dda::is_in_bounds
+        lda p1x+1
+        bne p2BoundsCheck
+        lda p1y+1
+        beq boundsCheckEnd
+        p2BoundsCheck:
+        ; p1 is out of bounds, now check p2
+        lda p2x+1
+        bne next ; skip the entire line
+        lda p2y+1
+        bne next
+        ; swap p1 and p2!
+        stz dda::is_in_bounds
+        a16
+        lda p1y
+        pha
+        lda p1x
+        pha
+        lda p2x
+        sta p1x
+        lda p2y
+        sta p1y
+        pla
+        sta p2x
+        pla
+        sta p2y
+        boundsCheckEnd:
+        a16
+
         ; dda::dest_addr = &whW_data_B, where W = one of [0,1,2,3] and B = one of [0,1]
         ldy #0
         lda counter
@@ -663,7 +797,7 @@ dest_addr_tab:
         pla
         pla
 
-        ; next
+        next:
         ldx next_star_point_ind
         cpx lowest_inner_index
         beq loopEnd
