@@ -15,11 +15,14 @@
 - 
 
 -- HALVE --
-- go through each of the five inner points
-- find the LOWEST (ly) and HIGHEST (hy) Y's (their indexes)
-- split the star in half on (ly--hy)
-- WH0 track starts on the point to the LEFT of hy
-	- when you hit ly, connect to hy
-- WH1 track starts on the point to the RIGHT of hy
-	- when you hit hy, connect to ly
+x go through each of the five inner points
+x find the LOWEST (ly) and HIGHEST (hy) Y's (their indexes)
+- both tracks start on hy and go counter-clockwise??
+- when traversing a track
+	- if next point.y > this point.y, draw on WH0/2
+	- else, WH1/3
+	- when this point.index == ly or hy, next point = the other one
 
+star_points = [[2, 1], [1, 2], [2, 3], [3, 2]]
+ly = 1
+hy = 3

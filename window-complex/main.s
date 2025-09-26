@@ -7,6 +7,7 @@
 .include "src/common.s"
 
 .include "src/ppu.s"
+.include "src/dda.s"
 .include "src/window.s"
 
 .zeropage
@@ -52,7 +53,7 @@ forever:
     	lsr a
     	bcs waitForInput
 
-    wdm 0
+    ; wdm 0
     jsr window::update
     wdm 0
 
@@ -68,4 +69,5 @@ nmi:
     
     stz nmi_ready
     end:
+    ; wdm 0
     rti

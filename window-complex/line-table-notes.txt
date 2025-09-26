@@ -9,9 +9,31 @@
 	- else
 		- start from END of line
 	- for each pixel in line
-		- X:16 = Y value * 2
+		- x:16 = Y value * 2
 		- X direction positive?
 			- get FIRST X value with this Y value
 		- else
 			- get LAST X value with this Y value
 		- store that X value at wh_table, x
+
+-- OR --
+
+- might be able to directly write to wh_table directly
+- from the start of "bresenham", I can tell
+	- X direction
+	- Y direction
+
+- to start, swap the two points, if necessary, so that it is going to the LEFT for the left side of the window.
+	- is p1.x < p2.x?
+		- swap p1 and p2
+- every step
+	- calculate the X,Y like normal
+	- y:16 = Y
+	- wh_table, y = X
+	- for testing purposes, set wh_table+1, y to be X + 10?
+
+TRANSFORMING & DRAWING STAR
+- 
+- while drawing each point in the star
+	- check the next 2 points
+		- are they both going 
