@@ -305,19 +305,16 @@
     ldy is_in_bounds
     bne yDecLoop
     yDecCheckLoop:
-	ldy is_xdiff_neg
-	php
     ldy p1y
-	plp
-	bne @subLoop
+    iny
+	bcs @subLoop
         @addLoop:
         ; plot pixel
-        sta (dest_addr), y
         dey
+        sta (dest_addr), y
         beq yEnd
 
         xba
-        clc
         adc inc_amount
         xba
 		adc inc_amount+1
@@ -327,12 +324,11 @@
 	bra yEnd
 		@subLoop:
         ; plot pixel
-        sta (dest_addr), y
         dey
+        sta (dest_addr), y
         beq yEnd
 
         xba
-        sec
         sbc inc_amount
         xba
 		sbc inc_amount+1

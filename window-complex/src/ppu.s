@@ -3,7 +3,7 @@
 .rodata
 
 amsterdam_pal:
-	.incbin "..\bin\amst.pal"
+	.incbin "../bin/amst.pal"
 amsterdam_pal_len = * - amsterdam_pal
 
 
@@ -12,7 +12,7 @@ amsterdam_pal_len = * - amsterdam_pal
 amsterdam:
 	; .incbin "..\chr\amst1.bin"
 	; .incbin "..\chr\amst2.bin"
-	.incbin "..\chr\amst.chr"
+	.incbin "../chr/amst.chr"
 amsterdam_len = * - amsterdam
 
 

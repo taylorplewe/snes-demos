@@ -189,7 +189,7 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
         iny
         cpy #10 * 2 * 2 ; last point
         bcc loop
-    inc theta
+    ; inc theta
 .endmacro
 
 .a8
@@ -217,9 +217,10 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     bne rotR
     beq rotEnd
     rotL:
-
+        dec theta
         bra rotEnd
     rotR:
+        inc theta
     rotEnd:
     a8
 
@@ -389,7 +390,7 @@ dest_addr_tab:
         :
         lda p1y
         cmp p2y
-        bcc :+
+        bmi :+
             iny
             iny
         :
