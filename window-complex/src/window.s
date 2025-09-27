@@ -20,7 +20,7 @@ lowest_inner_index:   .res 2 ; for splitting the star down the middle and drawin
 highest_inner_index:  .res 2
 
 theta:                .res 1
-scale:                .res 1
+scale:                .res 2
 
 
 .rodata
@@ -75,6 +75,8 @@ one: .byte 1
 ; both these numbers are 8.8 fixed point
 SCALE_MAX_INNER = (170/127) * 256
 SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
+SCALE_HALF_INNER = SCALE_MAX_INNER / 2
+SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
 
 ; each update loop:
 ;   1. calculate the scales of OUTER and INNER star points by (max scale) * ('scale' var)
@@ -108,6 +110,7 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     lda #>SCALE_MAX_INNER
     sta M7A
     lda scale
+    and #$7f
     sta M7B
     ldx MPYM
     stx inner_scale
@@ -117,9 +120,25 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     lda #>SCALE_MAX_OUTER
     sta M7A
     lda scale
+    and #$7f
     sta M7B
     ldx MPYM
     stx outer_scale
+
+    a16
+    lda scale
+    cmp #$0080
+    bcc :+
+        lda #SCALE_HALF_INNER
+        clc
+        adc inner_scale
+        sta inner_scale
+        lda #SCALE_HALF_OUTER
+        clc
+        adc outer_scale
+        sta outer_scale
+    :
+    a8
 
     ; generate points, starting with theta, and increasing the degree by 256/10 for 10 points
     lda theta
@@ -202,11 +221,9 @@ SCALE_MAX_OUTER = SCALE_MAX_INNER * ($80/$40)
     bit #JOY_D
     beq scaleEnd
     ;scaleD:
-        a8
         dec scale
         bra scaleEnd
     scaleU:
-        a8
         inc scale
     scaleEnd:
     a16
