@@ -51,7 +51,7 @@ one: .byte 1
     lda #TMSW_BG1
     sta TMW
 
-    lda #05
+    lda #$70
     sta scale
     rts
 .endproc
@@ -221,6 +221,9 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
     bit #JOY_D
     beq scaleEnd
     ;scaleD:
+        lda scale
+        cmp #0005
+        beq scaleEnd
         dec scale
         bra scaleEnd
     scaleU:
@@ -414,24 +417,13 @@ dest_addr_tab:
         lda is_drawing_right_side_tab, y
         sta is_drawing_right_side
 
-        ; if p1 is out of bounds (screen space) and p2 isn't, swap p1 and p2
-        ; p1 outside bounds?
-        a8
-        lda #1
-        sta dda::drawLine::is_in_bounds
-        lda p1x+1
-        bne p2BoundsCheck
-        lda p1y+1
-        beq boundsCheckEnd
-        p2BoundsCheck:
-        ; p1 is out of bounds, now check p2
-        lda p2x+1
-        bne next ; skip the entire line
-        lda p2y+1
-        bne next
-        ; swap p1 and p2!
-        stz dda::drawLine::is_in_bounds
+        ; swap p1 and p2 if p1 is lower Y
         a16
+        lda p1y
+        cmp p2y
+        beq next
+        bpl swapEnd
+
         ldx p1x
         ldy p1y
 
@@ -442,7 +434,7 @@ dest_addr_tab:
 
         stx p2x
         sty p2y
-        boundsCheckEnd:
+        swapEnd:
         a16
 
         ; dda::dest_addr = &whW_data_B, where W = one of [0,1,2,3] and B = one of [0,1]
