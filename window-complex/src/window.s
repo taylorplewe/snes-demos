@@ -347,7 +347,6 @@ dest_addr_tab:
     var p1y,                   2
     var p2x,                   2
     var p2y,                   2
-    var start_index,           2
     var is_drawing_right_side, 2
 
     window_clearNextWindowBuffer
@@ -416,6 +415,9 @@ dest_addr_tab:
         :
         lda is_drawing_right_side_tab, y
         sta is_drawing_right_side
+        xba
+        dec
+        sta dda::drawLine::wall_val ; 0 or 255 based on is_drawing_right_side
 
         ; swap p1 and p2 if p1 is lower Y
         a16

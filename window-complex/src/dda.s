@@ -15,14 +15,19 @@
     var p1y,          2
     var p2x,          2
     var p2y,          2
-    var curr_pos,     2 ; current 8:8 fixed position of the SHORTER axis of the two (the other just inc's or dec's by 1 each iteration)
     var xdiff,        1
     var ydiff,        1
-    var is_xdiff_neg, 2 ; bool
+    var is_xdiff_neg, 2
+    var curr_pos,     2 ; current 8:8 fixed position of the SHORTER axis of the two (the other just inc's or dec's by 1 each iteration)
     var inc_amount,   2 ; amount to add to curr_pos each iteration
     var dest_addr,    2 ; param
 
-    stz is_xdiff_neg
+    var wall_val,        1 ; when lines go off the left or right side of the screen, this dictactes what value to write instead (0 or 255)
+    var wall_before_len, 1
+    var normal_len,      1
+    var wall_after_len,  1
+
+    stz is_xdiff_neg ; TODO: might be able to delete this
 
     ; xdiff = abs(p2.x - p1.x)
     lda p2x
@@ -54,7 +59,7 @@
     div
     stx inc_amount
 
-    ; add p2.y to dest_addr, makes the loop easier
+    ; add p2.y to dest_addr, makes the loop easier if Y ends at 0
     a16
     lda dest_addr
     clc
@@ -62,24 +67,21 @@
     sta dest_addr
     a8
 
-    ; set length
-    lda #0
-    xba
-    lda ydiff
-    tax
-    inx ; draw last pixel too
+    ldy wall_before_len
+    lda wall_val
+    wallBeforeLoop:
+        sta (dest_addr), y
+        dey
+        bne wallBeforeLoop
 
-	lda is_xdiff_neg
-	ror
     ; cx = (p1x << 8) + $80 (.5) (so as to be "in the middle of the pixel")
     lda #$80
     xba
     lda p1x
     i8
-	txy
-    bcs @subLoop ; carry set from lda is_xdiff_neg, ror
+    ldx is_xdiff_neg
+    bne @subLoop ; carry set from lda is_xdiff_neg, ror
         @addLoop:
-        ; plot pixel
         sta (dest_addr), y
 
         xba
@@ -89,9 +91,8 @@
 
         dey
         bne @addLoop
-    bra yEnd
+    bra end
         @subLoop:
-        ; plot pixel
         sta (dest_addr), y
 
         xba
@@ -101,7 +102,16 @@
 
         dey
         bne @subLoop
-    yEnd:
+    bra end
+
+    ldy wall_after_len
+    lda wall_val
+    wallAfterLoop:
+        sta (dest_addr), y
+        dey
+        bne wallAfterLoop
+    
+    end:
     ai16
     rts
 .endproc
