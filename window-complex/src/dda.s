@@ -53,6 +53,7 @@
     sbc p2y
     a8
     sta ydiff
+    inc ; draw last pixel too
     sta normal_len
 
     ; xadd = xdiff / ydiff
@@ -73,8 +74,184 @@
     div
     stx yadd
 
-    
 
+    ; bounds checks & position corrections
+    a16
+
+    ; if p1.y >= 224
+    ;     overflow_amt = p1.y - 224
+    ;     p1.x += overflow_amt * xadd
+    ;     p1.y = 223
+    ;     normal_len -= overflow_amt
+    lda p1y
+    sec
+    sbc #224
+    bmi bottomCheckEnd
+        overflow_amt = temp
+        a8
+        sta overflow_amt
+        sta M7B
+        lda xadd
+        sta M7A
+        lda xadd+1
+        sta M7A
+        lda p1x
+        ldx is_xdiff_neg
+        bne :+
+            clc
+            adc MPYM
+            bra :++
+        :
+            sec
+            sbc MPYM
+        :
+        sta p1x
+        a8
+        lda normal_len
+        sec
+        sbc overflow_amt
+        sta normal_len
+        lda #223
+        sta p1y
+    bottomCheckEnd:
+    a16
+
+    ; if p2.y < 0
+    ;     normal_len -= abs(p2.y)
+    ;     OR
+    ;     normal_len += p2.y (since it's negative)
+    ;     OR
+    ;     normal_len = p1.y
+    lda p2y
+    bpl :+
+        lda p1y
+        sta normal_len
+        stz p2y
+    :
+
+    ; if (p1.x < 0 and p1.x < 0) or (p1.x >= 256) and (p2.x >= 256)
+    ;     wall_before_len = normal_len
+    ;     normal_len = 0
+    ;bothPastLeftCheck:
+    lda p1x
+    bpl bothPastRightCheck
+    lda p2x
+    bpl bothPastLeftOrRightCheckEnd
+    bra bothPastLeftOrRight
+    bothPastRightCheck:
+    a8
+    lda p1x+1
+    beq bothPastLeftOrRightCheckEnd
+    lda p2x+1
+    beq bothPastLeftOrRightCheckEnd
+        bothPastLeftOrRight:
+        a16
+        lda normal_len
+        sta wall_before_len
+        stz normal_len
+        jmp boundsCheckEnd
+    bothPastLeftOrRightCheckEnd:
+
+    ; if p1.x >= 256
+    ;     wall_before_len = (p1.x - 256) * yadd
+    ;     normal_len -= wall_before_len
+    a8
+    lda p1x+1
+    beq p2RightCheck
+    bmi p1Left
+        ; wdm 0
+        lda p1x
+        sta M7B
+        lda yadd
+        sta M7A
+        lda yadd+1
+        sta M7A
+        ldx MPYM
+        stx wall_before_len
+        lda normal_len
+        sec
+        sbc wall_before_len
+        sta normal_len
+        lda dest_addr
+        clc
+        adc normal_len
+        sta dest_addr
+        lda #$ff
+        sta p1x
+        jmp boundsCheckEnd
+    p2RightCheck:
+    ; if p2.x >= 256
+    ;     wall_after_len = (p2.x - 256) * yadd
+    ;     normal_len -= wall_after_len
+    lda p2x+1
+    beq boundsCheckEnd
+    bmi p2Left
+        ; wdm 0
+        lda p2x
+        sta M7B
+        lda yadd
+        sta M7A
+        lda yadd+1
+        sta M7A
+        ldx MPYM
+        stx wall_after_len
+        a16
+        lda normal_len
+        sec
+        sbc wall_after_len
+        sta normal_len
+        lda dest_addr
+        clc
+        adc wall_after_len
+        sta dest_addr
+        bra boundsCheckEnd
+
+    .a8
+    p1Left:
+        ; wdm 0
+        lda p1x
+        neg
+        sta M7B
+        lda yadd
+        sta M7A
+        lda yadd+1
+        sta M7A
+        ldx MPYM
+        stx wall_before_len
+        lda normal_len
+        sec
+        sbc wall_before_len
+        sta normal_len
+        lda dest_addr
+        clc
+        adc normal_len
+        sta dest_addr
+        lda #0
+        sta p1x
+        bra boundsCheckEnd
+    p2Left:
+        lda p2x
+        neg
+        sta M7B
+        lda yadd
+        sta M7A
+        lda yadd+1
+        sta M7A
+        ldx MPYM
+        stx wall_after_len
+        a16
+        lda normal_len
+        sec
+        sbc wall_after_len
+        sta normal_len
+        lda dest_addr
+        clc
+        adc wall_after_len
+        sta dest_addr
+
+    boundsCheckEnd:
+
+    
     ; add p2.y to dest_addr, makes the loop easier if Y ends at 0
     a16
     lda dest_addr
@@ -132,6 +309,7 @@
     wallAfter:
     ldy wall_after_len
     beq end
+    iny
     a16
     lda dest_addr
     sec

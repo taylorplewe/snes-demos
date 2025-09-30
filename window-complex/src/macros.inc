@@ -118,11 +118,12 @@
     .define mi(num) .loword(-num)
 
     ; local function vars
+    SIZEOF_TEMP_VARS = 4
     SIZEOF_LOCAL_VARS = 32
-    localVarPos .set 0
-    .define localVars localVarPos .set 0
+    localVarPos .set SIZEOF_TEMP_VARS
+    .define localVars localVarPos .set 4 ; i have no idea why this won't let me do SIZEOF_TEMP_VARS
     .macro var name, size
         name = localVarPos
         localVarPos .set localVarPos + size
-        .assert localVarPos <= SIZEOF_LOCAL_VARS, error, "Max size of local var space exceeded"
+        .assert localVarPos <= SIZEOF_TEMP_VARS + SIZEOF_LOCAL_VARS, error, "Max size of local var space exceeded"
     .endmacro

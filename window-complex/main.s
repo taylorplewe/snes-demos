@@ -12,11 +12,12 @@
 
 .zeropage
 
-local: .res SIZEOF_LOCAL_VARS
+temp:      .res SIZEOF_TEMP_VARS
+local:     .res SIZEOF_LOCAL_VARS
 nmi_ready: .res 1
-test_x: .res 2
-test_y: .res 2
-counter: .res 2
+test_x:    .res 2
+test_y:    .res 2
+counter:   .res 2
 
 
 .rodata
