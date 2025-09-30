@@ -54,6 +54,14 @@
     div
     stx inc_amount
 
+    ; add p2.y to dest_addr, makes the loop easier
+    a16
+    lda dest_addr
+    clc
+    adc p2y
+    sta dest_addr
+    a8
+
     ; set length
     lda #0
     xba
@@ -68,32 +76,30 @@
     xba
     lda p1x
     i8
-	ldy p1y
+	txy
     bcs @subLoop ; carry set from lda is_xdiff_neg, ror
         @addLoop:
         ; plot pixel
         sta (dest_addr), y
-        dey
 
         xba
         adc inc_amount
         xba
         adc inc_amount+1
 
-        dex
+        dey
         bne @addLoop
     bra yEnd
         @subLoop:
         ; plot pixel
         sta (dest_addr), y
-        dey
 
         xba
         sbc inc_amount
         xba
         sbc inc_amount+1
 
-        dex
+        dey
         bne @subLoop
     yEnd:
     ai16
