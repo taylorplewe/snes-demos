@@ -415,9 +415,11 @@ dest_addr_tab:
         :
         lda is_drawing_right_side_tab, y
         sta is_drawing_right_side
-        xba
+        a8
+        eor #1
         dec
         sta dda::drawLine::wall_val ; 0 or 255 based on is_drawing_right_side
+        a16
 
         ; swap p1 and p2 if p1 is lower Y
         a16
@@ -437,7 +439,13 @@ dest_addr_tab:
         stx p2x
         sty p2y
         swapEnd:
-        a16
+        
+        ; above and below bounds check
+        lda p2y
+        cmp #224
+        bpl next
+        lda p1y
+        bmi next
 
         ; dda::dest_addr = &whW_data_B, where W = one of [0,1,2,3] and B = one of [0,1]
         ldy #0
