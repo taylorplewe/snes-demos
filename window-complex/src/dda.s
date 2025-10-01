@@ -94,7 +94,10 @@
     lda p1x
     bpl bothPastRightCheck
     lda p2x
-    bpl bothPastLeftOrRightCheckEnd
+    bpl bothPastRightCheck
+    a8
+    stz wall_val
+    a16
     bra bothPastLeftOrRight
     bothPastRightCheck:
     a8
@@ -102,6 +105,8 @@
     beq bothPastLeftOrRightCheckEnd
     lda p2x+1
     beq bothPastLeftOrRightCheckEnd
+    lda #$ff
+    sta wall_val
         bothPastLeftOrRight:
         a16
         lda normal_len
@@ -121,6 +126,7 @@
         lda #$ff
         sta wall_val
         lda p1x
+        inc
         sta M7B
         lda yadd
         sta M7A
@@ -161,6 +167,7 @@
         lda #$ff
         sta wall_val
         lda p2x
+        inc
         sta M7B
         lda yadd
         sta M7A
@@ -185,6 +192,7 @@
     p1Left:
         stz wall_val
         lda p1x
+        dec
         neg
         sta M7B
         lda yadd
@@ -210,6 +218,7 @@
     p2Left:
         stz wall_val
         lda p2x
+        dec
         neg
         sta M7B
         lda yadd
@@ -312,6 +321,10 @@
 
     ; add p2.y to dest_addr, makes the loop easier if Y ends at 0
     a16
+    lda normal_len
+    bne :+
+        ; wdm 0
+    :
     lda dest_addr
     clc
     adc p2y
@@ -322,6 +335,7 @@
     ldy wall_before_len
     beq normalLoop
     lda wall_val
+    ; TODO: investigate why y is > $6000 here
     wallBeforeLoop:
         sta (dest_addr), y
         dey

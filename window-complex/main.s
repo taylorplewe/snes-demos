@@ -55,7 +55,7 @@ forever:
     	bcs waitForInput
 
     jsr window::update
-    ; wdm 0
+    wdm 0
 
     inc nmi_ready
     wai

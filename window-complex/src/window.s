@@ -127,8 +127,13 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
 
     a16
     lda scale
-    cmp #$0080
-    bcc :+
+    tay
+    scaleOverflowCheckLoop:
+        tya
+        sec
+        sbc #$0080
+        bmi scaleOverflowCheckLoopEnd
+        tay
         lda #SCALE_HALF_INNER
         clc
         adc inner_scale
@@ -137,7 +142,8 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
         clc
         adc outer_scale
         sta outer_scale
-    :
+        bra scaleOverflowCheckLoop
+    scaleOverflowCheckLoopEnd:
     a8
 
     ; generate points, starting with theta, and increasing the degree by 256/10 for 10 points
@@ -168,10 +174,6 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
         clc
         adc #128
         sta star_points, y
-        cmp #$a00
-        bmi :+
-            wdm 0
-        :
         a8
 
         lda curr_theta
@@ -198,10 +200,6 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
         sec
         sbc 1, s
         sta star_points+2, y
-        cmp #$a00
-        bmi :+
-            wdm 0
-        :
         pla
         a8
 
