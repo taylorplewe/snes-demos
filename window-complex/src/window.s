@@ -427,19 +427,9 @@ dest_addr_tab:
         lda p1y
         cmp p2y
         beq next
-        bpl swapEnd
-
-        ldx p1x
-        ldy p1y
-
-        lda p2x
-        sta p1x
-        lda p2y
-        sta p1y
-
-        stx p2x
-        sty p2y
-        swapEnd:
+        bpl :+
+        jsr dda::swapP1P2
+        :
         
         ; above and below bounds check
         lda p2y
