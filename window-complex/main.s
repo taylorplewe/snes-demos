@@ -54,9 +54,8 @@ forever:
     	lsr a
     	bcs waitForInput
 
-    ; wdm 0
     jsr window::update
-    wdm 0
+    ; wdm 0
 
     inc nmi_ready
     wai

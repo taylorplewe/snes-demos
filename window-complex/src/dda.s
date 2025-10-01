@@ -19,6 +19,7 @@
         sta M7A
         lda xadd+1
         sta M7A
+        a16
         lda p1x
         ldx is_xdiff_neg
         bne :+
@@ -55,6 +56,7 @@
 .endmacro
 
 .macro dda_xBoundsCheck
+    ai16
     ; if (p1.x < 0 and p1.x < 0) or (p1.x >= 256) and (p2.x >= 256)
     ;     wall_before_len = normal_len
     ;     normal_len = 0
@@ -85,7 +87,7 @@
     lda p1x+1
     beq p2RightCheck
     bmi p1Left
-        ; wdm 0
+    p1Right:
         lda p1x
         sta M7B
         lda yadd
@@ -93,6 +95,7 @@
         lda yadd+1
         sta M7A
         ldx MPYM
+        beq @end
         stx wall_before_len
         lda normal_len
         sec
@@ -104,15 +107,19 @@
         sta dest_addr
         lda #$ff
         sta p1x
+        @end:
         jmp boundsCheckEnd
     p2RightCheck:
     ; if p2.x >= 256
     ;     wall_after_len = (p2.x - 256) * yadd
     ;     normal_len -= wall_after_len
     lda p2x+1
-    beq boundsCheckEnd
+    beq :+
     bmi p2Left
-        ; wdm 0
+    bpl p2Right
+    :
+    jmp boundsCheckEnd
+    p2Right:
         lda p2x
         sta M7B
         lda yadd
@@ -120,6 +127,7 @@
         lda yadd+1
         sta M7A
         ldx MPYM
+        beq @end
         stx wall_after_len
         a16
         lda normal_len
@@ -130,11 +138,11 @@
         clc
         adc wall_after_len
         sta dest_addr
+        @end:
         bra boundsCheckEnd
 
     .a8
     p1Left:
-        ; wdm 0
         lda p1x
         neg
         sta M7B
@@ -143,6 +151,7 @@
         lda yadd+1
         sta M7A
         ldx MPYM
+        beq @end
         stx wall_before_len
         lda normal_len
         sec
@@ -154,6 +163,7 @@
         sta dest_addr
         lda #0
         sta p1x
+        @end:
         bra boundsCheckEnd
     p2Left:
         lda p2x
@@ -164,6 +174,7 @@
         lda yadd+1
         sta M7A
         ldx MPYM
+        beq boundsCheckEnd
         stx wall_after_len
         a16
         lda normal_len
