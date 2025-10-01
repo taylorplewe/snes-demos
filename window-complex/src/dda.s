@@ -8,6 +8,11 @@
     ;     p1.y = 223
     ;     normal_len -= overflow_amt
     lda p1y
+    cmp #224 + 128
+    bmi :+
+        lda #224 + 127
+        sta p1y
+    :
     sec
     sbc #224
     bmi bottomCheckEnd
@@ -31,11 +36,16 @@
             sbc MPYM
         :
         sta p1x
+        cmp #$a00
+        bmi :+
+            ; wdm 0
+        :
         a8
         lda normal_len
         sec
         sbc overflow_amt
         sta normal_len
+        a16
         lda #223
         sta p1y
     bottomCheckEnd:
@@ -48,11 +58,31 @@
     ;     OR
     ;     normal_len = p1.y
     lda p2y
-    bpl :+
+    bpl topBoundsCheckEnd
+        neg
+        a8
+        sta M7B
+        lda xadd
+        sta M7A
+        lda xadd+1
+        sta M7A
+        a16
+        lda p2x
+        ldx is_xdiff_neg
+        beq :+ ; backwards; if the line goes up and to the right, go down and to the left
+            clc
+            adc MPYM
+            bra :++
+        :
+            sec
+            sbc MPYM
+        :
+        sta p2x
+        stz p2y
+
         lda p1y
         sta normal_len
-        stz p2y
-    :
+    topBoundsCheckEnd:
 .endmacro
 
 .macro dda_xBoundsCheck
@@ -88,6 +118,8 @@
     beq p2RightCheck
     bmi p1Left
     p1Right:
+        lda #$ff
+        sta wall_val
         lda p1x
         sta M7B
         lda yadd
@@ -105,10 +137,16 @@
         clc
         adc normal_len
         sta dest_addr
+        a16
         lda #$ff
         sta p1x
+        cmp #$a00
+        bmi :+
+            ; wdm 0
+        :
         @end:
         jmp boundsCheckEnd
+    .a8
     p2RightCheck:
     ; if p2.x >= 256
     ;     wall_after_len = (p2.x - 256) * yadd
@@ -120,6 +158,8 @@
     :
     jmp boundsCheckEnd
     p2Right:
+        lda #$ff
+        sta wall_val
         lda p2x
         sta M7B
         lda yadd
@@ -143,6 +183,7 @@
 
     .a8
     p1Left:
+        stz wall_val
         lda p1x
         neg
         sta M7B
@@ -161,11 +202,13 @@
         clc
         adc normal_len
         sta dest_addr
-        lda #0
-        sta p1x
+        a16
+        stz p1x
         @end:
         bra boundsCheckEnd
+    .a8
     p2Left:
+        stz wall_val
         lda p2x
         neg
         sta M7B

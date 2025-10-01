@@ -168,6 +168,10 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
         clc
         adc #128
         sta star_points, y
+        cmp #$a00
+        bmi :+
+            wdm 0
+        :
         a8
 
         lda curr_theta
@@ -194,6 +198,10 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
         sec
         sbc 1, s
         sta star_points+2, y
+        cmp #$a00
+        bmi :+
+            wdm 0
+        :
         pla
         a8
 
@@ -415,11 +423,6 @@ dest_addr_tab:
         :
         lda is_drawing_right_side_tab, y
         sta is_drawing_right_side
-        a8
-        eor #1
-        dec
-        sta dda::drawLine::wall_val ; 0 or 255 based on is_drawing_right_side
-        a16
 
         ; swap p1 and p2 if p1 is lower Y
         a16
