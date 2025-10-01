@@ -1,20 +1,32 @@
     .macro a8
-        sep #%00100000 ; a 8 bit
+        .if (.asize = 16)
+            sep #%00100000 ; a 8 bit
+        .endif
     .endmacro
     .macro a16
-        rep #%00100000 ; a 16 bit
+        .if (.asize = 8)
+            rep #%00100000 ; a 16 bit
+        .endif
     .endmacro
     .macro i8
-        sep #%00010000 ; x & y 8 bit
+        .if (.isize = 16)
+            sep #%00010000 ; x & y 8 bit
+        .endif
     .endmacro
     .macro i16
-        rep #%00010000 ; x & y 16 bit
+        .if (.isize = 8)
+            rep #%00010000 ; x & y 16 bit
+        .endif
     .endmacro
     .macro ai8
-        sep #%00110000 ; both 8 bit
+        .if (.asize = 16 || .isize = 16)
+            sep #%00110000 ; both 8 bit
+        .endif
     .endmacro
     .macro ai16
-        rep #%00110000 ; both 16 bit
+        .if (.asize = 8 || .isize = 8)
+            rep #%00110000 ; both 16 bit
+        .endif
     .endmacro
 
     .macro asr

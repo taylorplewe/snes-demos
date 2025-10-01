@@ -1,83 +1,7 @@
 .scope dda
 
-.code
-
-; in:
-    ; A:16 = p1.x
-    ; SP+3 = p1.y
-    ; SP+5 = p2.x
-    ; SP+7 = p2.y
-.a16
-.i16
-.proc drawLine
-    localVars
-    var p1x,          2
-    var p1y,          2
-    var p2x,          2
-    var p2y,          2
-    var xdiff,        1
-    var ydiff,        1
-    var is_xdiff_neg, 2
-    var curr_pos,     2 ; 8.8 fixed point; current X position
-    var xadd,         2 ; 8.8 fixed point; amount to add to curr_pos each iteration
-    var yadd,         2
-    var dest_addr,    2 ; param
-
-    var wall_val,        1 ; when lines go off the left or right side of the screen, this dictactes what value to write instead (0 or 255)
-    var wall_before_len, 2
-    var normal_len,      2 ; TODO might just do normal_len = ydiff since theyre the same, and once normal_len starts changing ydiff isnt needed anymore
-    var wall_after_len,  2
-
-    stz is_xdiff_neg ; TODO: might be able to delete this
-    stz wall_before_len
-    stz normal_len
-    stz wall_after_len
-
-    ; xdiff = abs(p2.x - p1.x)
-    lda p2x
-    sec
-    sbc p1x
-    php
-    cmp #$8000
-    rol is_xdiff_neg ; 1 if negative, 0 otherwise
-    plp
-    abs
-    a8
-    sta xdiff
-    a16
-
-    ; ydiff = abs(p2.y - p1.y)
-    ; same as p1.y - p2.y since p1.y is always greater
-    lda p1y
-    sec
-    sbc p2y
-    a8
-    sta ydiff
-    inc ; draw last pixel too
-    sta normal_len
-
-    ; xadd = xdiff / ydiff
-    lda xdiff
-    xba
-    lda #0
-    tax ; if xdiff is 7, X:16 = $700
-    lda ydiff
-    div
-    stx xadd
-
-    ; yadd = ydiff / xdiff
-    lda ydiff
-    xba
-    lda #0
-    tax ; if ydiff is 7, X:16 = $700
-    lda xdiff
-    div
-    stx yadd
-
-
-    ; bounds checks & position corrections
-    a16
-
+.macro dda_yBoundsCheck
+    ai16
     ; if p1.y >= 224
     ;     overflow_amt = p1.y - 224
     ;     p1.x += overflow_amt * xadd
@@ -128,7 +52,9 @@
         sta normal_len
         stz p2y
     :
+.endmacro
 
+.macro dda_xBoundsCheck
     ; if (p1.x < 0 and p1.x < 0) or (p1.x >= 256) and (p2.x >= 256)
     ;     wall_before_len = normal_len
     ;     normal_len = 0
@@ -250,8 +176,86 @@
         sta dest_addr
 
     boundsCheckEnd:
+.endmacro
 
-    
+.code
+
+; in:
+    ; A:16 = p1.x
+    ; SP+3 = p1.y
+    ; SP+5 = p2.x
+    ; SP+7 = p2.y
+.a16
+.i16
+.proc drawLine
+    localVars
+    var p1x,          2
+    var p1y,          2
+    var p2x,          2
+    var p2y,          2
+    var xdiff,        1
+    var ydiff,        1
+    var is_xdiff_neg, 2
+    var curr_pos,     2 ; 8.8 fixed point; current X position
+    var xadd,         2 ; 8.8 fixed point; amount to add to curr_pos each iteration
+    var yadd,         2
+    var dest_addr,    2 ; param
+
+    var wall_val,        1 ; when lines go off the left or right side of the screen, this dictactes what value to write instead (0 or 255)
+    var wall_before_len, 2
+    var normal_len,      2 ; TODO might just do normal_len = ydiff since theyre the same, and once normal_len starts changing ydiff isnt needed anymore
+    var wall_after_len,  2
+
+    stz is_xdiff_neg ; TODO: might be able to delete this
+    stz wall_before_len
+    stz normal_len
+    stz wall_after_len
+
+    ; xdiff = abs(p2.x - p1.x)
+    lda p2x
+    sec
+    sbc p1x
+    php
+    cmp #$8000
+    rol is_xdiff_neg ; 1 if negative, 0 otherwise
+    plp
+    abs
+    a8
+    sta xdiff
+    a16
+
+    ; ydiff = abs(p2.y - p1.y)
+    ; same as p1.y - p2.y since p1.y is always greater
+    lda p1y
+    sec
+    sbc p2y
+    a8
+    sta ydiff
+    inc ; draw last pixel too
+    sta normal_len
+
+    ; xadd = xdiff / ydiff
+    lda xdiff
+    xba
+    lda #0
+    tax ; if xdiff is 7, X:16 = $700
+    lda ydiff
+    div
+    stx xadd
+
+    ; yadd = ydiff / xdiff
+    lda ydiff
+    xba
+    lda #0
+    tax ; if ydiff is 7, X:16 = $700
+    lda xdiff
+    div
+    stx yadd
+
+    ; bounds checks & position corrections
+    dda_yBoundsCheck
+    dda_xBoundsCheck
+
     ; add p2.y to dest_addr, makes the loop easier if Y ends at 0
     a16
     lda dest_addr
@@ -259,6 +263,8 @@
     adc p2y
     sta dest_addr
     a8
+
+    ;wallBefore:
     ldy wall_before_len
     beq normalLoop
     lda wall_val
