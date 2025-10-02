@@ -243,12 +243,13 @@
         adc p1y
     :
     sta dest_addr
-    a8
+    ai8
 
     ldy len
 
     lda are_both_off_sides
     beq :+
+    wdm 0
     jmp wallLoop
     :
 
@@ -256,7 +257,6 @@
     lda #$80
     xba
     lda p1x
-    i8
     ldx is_p2_off_sides
     bne decLoopWithCheck
     ldx is_p1_off_sides
@@ -275,7 +275,7 @@
 
         dey
         bne @addLoop
-    bra oneMore
+    bra end
         @subLoop:
         sta (dest_addr), y
 
@@ -286,7 +286,7 @@
 
         dey
         bne @subLoop
-    bra oneMore
+    bra end
 
     decLoopWithCheck:
     ldx is_xdiff_neg
@@ -295,7 +295,7 @@
         @addLoop:
         sta (dest_addr), y
         dey
-        beq oneMore
+        beq end
 
         xba
         adc xadd
@@ -306,7 +306,7 @@
         @subLoop:
         sta (dest_addr), y
         dey
-        beq oneMore
+        beq end
 
         xba
         sbc xadd
@@ -314,9 +314,6 @@
         sbc xadd+1
         bcs @subLoop
     bra wallLoop
-    oneMore:
-    sta (dest_addr), y
-    bra end
 
     incLoopWithCheck:
     pha
@@ -347,7 +344,6 @@
         sbc xadd+1
         bcs @subLoop
     incLoopAfter:
-    sta (dest_addr), y
     a16
     tya
     clc
