@@ -29,7 +29,6 @@
     ;     overflow_amt = p1.y - 224
     ;     p1.x += overflow_amt * xadd
     ;     p1.y = 223
-    ;     len -= overflow_amt
     lda p1y
     cmp #224 + 128
     bmi :+
@@ -59,12 +58,6 @@
             sbc MPYM
         :
         sta p1x
-        a8
-        lda len
-        sec
-        sbc overflow_amt
-        sta len
-        a16
         lda #223
         sta p1y
     bottomCheckEnd:
@@ -98,9 +91,6 @@
         :
         sta p2x
         stz p2y
-
-        lda p1y
-        sta len
     topBoundsCheckEnd:
 .endmacro
 
@@ -215,8 +205,6 @@
     sbc p2y
     a8
     sta ydiff
-    inc ; draw last pixel too
-    sta len
 
     ; xadd = xdiff / ydiff
     lda xdiff
@@ -230,6 +218,23 @@
     ; bounds checks & position corrections
     dda_yBoundsCheck
     dda_xBoundsCheck
+
+    ; set length of line
+    a16
+    ldx is_p1_off_sides
+    bne :+
+        lda p1y
+        sec
+        sbc p2y
+        sta len
+        bra :++
+    :
+        lda p2y
+        sec
+        sbc p1y
+        sta len
+    :
+    a8
 
     ; add line's topmost Y to dest_addr, makes the loop easier if Y ends at 0
     a16
@@ -249,7 +254,7 @@
 
     lda are_both_off_sides
     beq :+
-    wdm 0
+    ; wdm 0
     jmp wallLoop
     :
 

@@ -7,7 +7,7 @@
 ; there currently (generated last frame)
 .repeat 2, buffer_ind
     .repeat 4, window_reg_ind
-        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 256 ; even though there's 224 scanlines, allocating 256 makes the writing loop (which must be fully optimized) much easier to bounds check
+        .ident(.sprintf("wh%d_data_%d", window_reg_ind, buffer_ind)): .res 224
     .endrepeat
 .endrepeat
 
@@ -51,7 +51,7 @@ one: .byte 1
     lda #TMSW_BG1
     sta TMW
 
-    lda #$70
+    lda #$30
     sta scale
     rts
 .endproc
@@ -221,21 +221,53 @@ SCALE_HALF_OUTER = SCALE_MAX_OUTER / 2
 .i16
 .proc update
     a16
+    i8
     lda JOY1L
     bit #JOY_U
     bne scaleU
     bit #JOY_D
     beq scaleEnd
     ;scaleD:
+        ldx scale
+        stx M7A
+        ldx scale+1
+        stx M7A
+        ldx #$08
+        stx M7B
+        lda MPYM
+        bne :+
+            lda #1
+        :
+        sta temp
         lda scale
+        sec
+        sbc temp
         cmp #0005
-        beq scaleEnd
-        dec scale
+        bpl :+
+            lda #0005
+        :
+        sta scale
         bra scaleEnd
     scaleU:
-        inc scale
+        ldx scale
+        stx M7A
+        ldx scale+1
+        stx M7A
+        ldx #$08
+        stx M7B
+        lda MPYM
+        bne :+
+            lda #1
+        :
+        clc
+        adc scale
+        cmp #$180
+        bmi :+
+            lda #$180
+        :
+        sta scale
     scaleEnd:
-    a16
+    ai16
     lda JOY1L
     bit #JOY_L
     bne rotL
