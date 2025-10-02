@@ -8,7 +8,7 @@ ca65 main.s -o bin\main.o -g
 if ($LASTEXITCODE -ne 0) { set-location $initialDir; return }
 
 write-output "linking..."
-ld65 -C ..\lorom.cfg -o "bin\$gamename.sfc" bin\main.o --dbgfile "bin\$gamename.dbg"
+ld65 bin\main.o -o "bin\$gamename.sfc" -C ..\lorom.cfg --dbgfile "bin\$gamename.dbg"
 if ($LASTEXITCODE -ne 0) { set-location $initialDir; return }
 
 # & "bin\$gamename.sfc" # default program = Mesen

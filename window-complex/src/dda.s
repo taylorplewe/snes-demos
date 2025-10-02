@@ -226,18 +226,17 @@
         lda p1y
         sec
         sbc p2y
-        sta len
         bra :++
     :
         lda p2y
         sec
         sbc p1y
-        sta len
     :
-    a8
+    sta len
+    ; a8
 
     ; add line's topmost Y to dest_addr, makes the loop easier if Y ends at 0
-    a16
+    ; a16
     lda dest_addr
     clc
     ldx is_p1_off_sides
@@ -349,7 +348,9 @@
         sbc xadd+1
         bcs @subLoop
     incLoopAfter:
-    a16
+    ai16
+    cpy len
+    bcs end
     tya
     clc
     adc dest_addr
@@ -361,7 +362,7 @@
     sbc temp
     tay
     iny
-    a8
+    ai8
 
     wallLoop:
     cpy #0
