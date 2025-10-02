@@ -322,7 +322,7 @@
     eor #1
     cmp #1
     pla
-    ldy #0
+    ldy #1
     bcs @subLoop
         @addLoop:
         sta (dest_addr), y
