@@ -1,7 +1,5 @@
 # Sonic in Southern Utah
 
-Yup.
-
 (GIF doesn't do the 60fps or the color palette justice. Play it for yourself.)
 
 [Play it in the browser](https://tplewe.com/snes-demos/dist#sutah)
