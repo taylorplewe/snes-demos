@@ -295,6 +295,7 @@ atan_y_diff_abs: .res 2
     eor atan_rot ; ...xor the dx bit with the dy bit
     sta atan_rot
 
+    ; |dy| > |dx|?
     tya
     cmp atan_x_diff_abs
     php ; hang onto the carry

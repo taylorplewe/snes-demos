@@ -54,8 +54,8 @@ reset:
 	lda #INIDISP_BLANK
 	sta INIDISP
 
-	ldx #.loword(89)
-	ldy #.loword(-4)
+	ldx #.loword(0)
+	ldy #.loword(59)
 	jsr atan_new_mini
 	wdm 0
 
