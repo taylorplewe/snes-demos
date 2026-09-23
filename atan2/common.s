@@ -365,8 +365,7 @@ atan_y_diff_abs: .res 2
                 xba
                 lda atan_x_diff_abs
                 jsr atan_new_inner
-                clc
-                adc #$40
+                ora #$40
                 rts
             @ydelta_pos_y_is_less:
                 xba
@@ -374,8 +373,7 @@ atan_y_diff_abs: .res 2
                 xba
                 jsr atan_new_inner
                 rsb #$20
-                clc
-                adc #$60
+                ora #$60
                 rts
         .a16
         @ydelta_neg:
@@ -392,16 +390,14 @@ atan_y_diff_abs: .res 2
                 lda atan_x_diff_abs
                 jsr atan_new_inner
                 rsb #$20
-                clc
-                adc #$a0
+                ora #$a0
                 rts
             @ydelta_neg_y_is_less:
                 xba
                 lda atan_x_diff_abs
                 xba
                 jsr atan_new_inner
-                clc
-                adc #$80
+                ora #$80
                 rts
 
     .a16
@@ -420,8 +416,7 @@ atan_y_diff_abs: .res 2
                 lda atan_x_diff_abs
                 jsr atan_new_inner
                 rsb #$20
-                clc
-                adc #$20
+                ora #$20
                 rts
             @ydelta_pos_y_is_less:
                 xba
@@ -443,8 +438,7 @@ atan_y_diff_abs: .res 2
                 xba
                 lda atan_x_diff_abs
                 jsr atan_new_inner
-                clc
-                adc #$c0
+                ora #$c0
                 rts
             @ydelta_neg_y_is_less:
                 xba
@@ -452,8 +446,7 @@ atan_y_diff_abs: .res 2
                 xba
                 jsr atan_new_inner
                 rsb #$20
-                clc
-                adc #$e0
+                ora #$e0
                 rts
 .endproc
 
