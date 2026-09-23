@@ -28,3 +28,11 @@
 		ldy #count
 		jsr dma_ch0
 	.endmacro
+	.macro neg
+        .if .asize = 8
+            eor #$ff
+        .else
+            eor #$ffff
+        .endif
+        inc
+    .endmacro

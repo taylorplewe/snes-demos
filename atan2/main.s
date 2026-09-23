@@ -26,7 +26,7 @@ CIRCLE_START_X = (256/2)<<8
 CIRCLE_START_Y = (224/2)<<8
 CIRCLE2_START_X = 196<<8
 CIRCLE2_START_Y = 19<<8
-	
+
 	.code
 reset:
 	; go into native mode lets gooooo
@@ -53,6 +53,11 @@ reset:
 	; turn off screen forppuwrites
 	lda #INIDISP_BLANK
 	sta INIDISP
+
+	lda #5
+	xba
+	lda #1
+	jsr atan_new
 
 	ldx #CIRCLE_START_X
 	stx circle_x
@@ -108,7 +113,7 @@ forever:
 		ldx #0
 		lda #SPR_HI_LARGE
 		jsr set_oam_hi_bits
-	
+
 	; draw circle 2
 	lda circle2_x+1
 	sec

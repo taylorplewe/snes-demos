@@ -108,7 +108,7 @@ sin:
 
 	and #$7f		; else make +ve
 	jsr @sin_cos		; get SIN/COS
-	
+
 	; now do twos complement
 	a16
 	eor #$ffff
@@ -190,15 +190,15 @@ atan2:
 		lda @diff2
 		and #%11110000
 	; combine the two
-		clc 
+		clc
 		adc @diff1
 	i8
 	tay
 	lda atantab, y
 	i16
-	clc 
+	clc
 	adc @temp
-	rts 
+	rts
 ;------------------------------------------
 atantab:
 	; a>>3 = ydiff
@@ -236,3 +236,112 @@ atantab:
 atan_offsets:
 	; .byte $00,$10,$30,$20
 	.byte 0, 64, 128, 192
+
+.zeropage
+
+atan_x_diff_abs: .res 2
+
+
+.code
+
+; in:
+    ; X:16 - X2-X1 signed
+    ; Y:16 - Y2-Y1 signed
+; out:
+    ; A:8  - angle
+.a8
+.i16
+.proc atan_new
+    a16
+    txa
+    bpl xdelta_pos
+    xdelta_neg:
+        ; flip it
+        neg
+        tax
+        stx atan_x_diff_abs
+
+        tya
+        bpl @ydelta_neg
+        ;ydelta_pos:
+            jsr @cmp_and_get_atan
+        @ydelta_neg:
+            ; flip it
+            neg
+            tay
+
+            cmp atan_x_diff_abs
+            a8
+            bcc @y_is_less
+            ;y_is_more:
+                xba
+                lda atan_x_diff_abs
+                jsr atan_new_inner
+            @y_is_less:
+                xba
+                lda atan_x_diff_abs
+                xba
+                jsr atan_new_inner
+
+    xdelta_pos:
+        stx atan_x_diff_abs
+
+        tya
+        bpl @ydelta_neg
+        ;ydelta_pos:
+
+        @ydelta_neg:
+            ; flip it
+            neg
+            tay
+
+
+    jsr atan_new_inner
+    rts
+.endproc
+
+; in:
+    ; A:8 - smaller absolute value delta
+    ; B:8 - larger  absolute value delta
+; out:
+    ; A:8  - angle
+.a8
+.i16
+.proc atan_new_inner
+    ; 1. get index into atantab2
+    ; (smaller delta / larger delta) gives us value from 0 to 1 (0 to 256)
+    sta WRDIVH
+    stz WRDIVL
+    xba
+    sta WRDIVB
+	nop    ; 2
+	nop    ; 4
+	nop    ; 6
+	nop    ; 8
+	lda #0 ; 10
+	xba    ; 13
+	lda RDDIVL
+
+	; 2. get value from table
+	tax
+	lda atantab2, x
+
+    rts
+.endproc
+atantab2:
+     .byte $00,$00,$00,$00,$01,$01,$01,$01,$01,$01,$02,$02,$02,$02,$02,$02
+     .byte $03,$03,$03,$03,$03,$03,$04,$04,$04,$04,$04,$04,$04,$05,$05,$05
+     .byte $05,$05,$05,$06,$06,$06,$06,$06,$06,$06,$07,$07,$07,$07,$07,$07
+     .byte $08,$08,$08,$08,$08,$08,$09,$09,$09,$09,$09,$09,$09,$0a,$0a,$0a
+     .byte $0a,$0a,$0a,$0a,$0b,$0b,$0b,$0b,$0b,$0b,$0c,$0c,$0c,$0c,$0c,$0c
+     .byte $0c,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0f
+     .byte $0f,$0f,$0f,$0f,$0f,$0f,$10,$10,$10,$10,$10,$10,$10,$10,$11,$11
+     .byte $11,$11,$11,$11,$11,$12,$12,$12,$12,$12,$12,$12,$12,$13,$13,$13
+     .byte $13,$13,$13,$13,$13,$14,$14,$14,$14,$14,$14,$14,$14,$15,$15,$15
+     .byte $15,$15,$15,$15,$15,$16,$16,$16,$16,$16,$16,$16,$16,$16,$17,$17
+     .byte $17,$17,$17,$17,$17,$17,$18,$18,$18,$18,$18,$18,$18,$18,$18,$19
+     .byte $19,$19,$19,$19,$19,$19,$19,$19,$19,$1a,$1a,$1a,$1a,$1a,$1a,$1a
+     .byte $1a,$1a,$1a,$1b,$1b,$1b,$1b,$1b,$1b,$1b,$1b,$1b,$1b,$1c,$1c,$1c
+     .byte $1c,$1c,$1c,$1c,$1c,$1c,$1c,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+     .byte $1d,$1d,$1e,$1e,$1e,$1e,$1e,$1e,$1e,$1e,$1e,$1e,$1e,$1f,$1f,$1f
+     .byte $1f,$1f,$1f,$1f,$1f,$1f,$1f,$1f,$1f,$20,$20,$20,$20,$20,$20,$20
