@@ -246,9 +246,7 @@ atan_y_diff_abs: .res 2
 
 .code
 
-; n v m x d i z c
-; n           z c
-
+; NOTE: I wrote this thinking it would be smaller & faster than `atan_new`, but in practice since every path needs to execute almost all these instructions, it's slower execution time.
 ; in:
     ; X:16 - X2-X1 signed
     ; Y:16 - Y2-Y1 signed
@@ -352,8 +350,7 @@ atan_y_diff_abs: .res 2
     xdelta_neg:
         ; flip it
         neg
-        tax
-        stx atan_x_diff_abs
+        sta atan_x_diff_abs
 
         tya
         bmi @ydelta_neg
@@ -403,7 +400,7 @@ atan_y_diff_abs: .res 2
 
     .a16
     xdelta_pos:
-        stx atan_x_diff_abs
+        sta atan_x_diff_abs
 
         tya
         bmi @ydelta_neg
@@ -448,6 +445,7 @@ atan_y_diff_abs: .res 2
                 rsb #$20
                 ora #$e0
                 rts
+    endd:
 .endproc
 
 ; in:
