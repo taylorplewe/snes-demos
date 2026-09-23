@@ -262,9 +262,27 @@ atan_x_diff_abs: .res 2
         stx atan_x_diff_abs
 
         tya
-        bpl @ydelta_neg
+        bmi @ydelta_neg
         ;ydelta_pos:
-            jsr @cmp_and_get_atan
+            cmp atan_x_diff_abs
+            a8
+            bcc @ydelta_pos_y_is_less
+            ;ydelta_pos_y_is_more:
+                xba
+                lda atan_x_diff_abs
+                jsr atan_new_inner
+                rsb #$20
+                clc
+                adc #$40
+                rts
+            @ydelta_pos_y_is_less:
+                xba
+                lda atan_x_diff_abs
+                xba
+                jsr atan_new_inner
+                clc
+                adc #$60
+                rts
         @ydelta_neg:
             ; flip it
             neg
@@ -272,29 +290,71 @@ atan_x_diff_abs: .res 2
 
             cmp atan_x_diff_abs
             a8
-            bcc @y_is_less
-            ;y_is_more:
+            bcc @ydelta_neg_y_is_less
+            ;ydelta_neg_y_is_more:
                 xba
                 lda atan_x_diff_abs
                 jsr atan_new_inner
-            @y_is_less:
+                rsb #$20
+                clc
+                adc #$a0
+                rts
+            @ydelta_neg_y_is_less:
                 xba
                 lda atan_x_diff_abs
                 xba
                 jsr atan_new_inner
+                clc
+                adc #$80
+                rts
 
     xdelta_pos:
         stx atan_x_diff_abs
 
         tya
-        bpl @ydelta_neg
+        bmi @ydelta_neg
         ;ydelta_pos:
-
+            cmp atan_x_diff_abs
+            a8
+            bcc @ydelta_pos_y_is_less
+            ;ydelta_pos_y_is_more:
+                xba
+                lda atan_x_diff_abs
+                jsr atan_new_inner
+                rsb #$20
+                clc
+                adc #$20
+                rts
+            @ydelta_pos_y_is_less:
+                xba
+                lda atan_x_diff_abs
+                xba
+                jsr atan_new_inner
+                rts
         @ydelta_neg:
             ; flip it
             neg
             tay
 
+            cmp atan_x_diff_abs
+            a8
+            bcc @ydelta_neg_y_is_less
+            ;ydelta_neg_y_is_more:
+                xba
+                lda atan_x_diff_abs
+                jsr atan_new_inner
+                rsb #$20
+                clc
+                adc #$c0
+                rts
+            @ydelta_neg_y_is_less:
+                xba
+                lda atan_x_diff_abs
+                xba
+                jsr atan_new_inner
+                clc
+                adc #$e0
+                rts
 
     jsr atan_new_inner
     rts

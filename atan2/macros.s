@@ -36,3 +36,15 @@
         .endif
         inc
     .endmacro
+    ; reverse Subtract with Accumulator
+    ; A = memory - A
+    ; taken straight from ca65.html
+    .macro rsb param
+        .if .asize = 8
+            eor #$ff
+        .else
+            eor #$ffff
+        .endif
+        sec
+        adc param
+    .endmacro
