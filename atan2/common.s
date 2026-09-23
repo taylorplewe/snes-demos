@@ -266,6 +266,7 @@ atan_x_diff_abs: .res 2
         ;ydelta_pos:
             cmp atan_x_diff_abs
             a8
+            beq @ydelta_pos_y_is_less
             bcc @ydelta_pos_y_is_less
             ;ydelta_pos_y_is_more:
                 xba
@@ -290,6 +291,7 @@ atan_x_diff_abs: .res 2
 
             cmp atan_x_diff_abs
             a8
+            beq @ydelta_neg_y_is_less
             bcc @ydelta_neg_y_is_less
             ;ydelta_neg_y_is_more:
                 xba
@@ -308,6 +310,7 @@ atan_x_diff_abs: .res 2
                 adc #$80
                 rts
 
+    .a16
     xdelta_pos:
         stx atan_x_diff_abs
 
@@ -316,6 +319,7 @@ atan_x_diff_abs: .res 2
         ;ydelta_pos:
             cmp atan_x_diff_abs
             a8
+            beq @ydelta_pos_y_is_less
             bcc @ydelta_pos_y_is_less
             ;ydelta_pos_y_is_more:
                 xba
@@ -338,6 +342,7 @@ atan_x_diff_abs: .res 2
 
             cmp atan_x_diff_abs
             a8
+            beq @ydelta_neg_y_is_less
             bcc @ydelta_neg_y_is_less
             ;ydelta_neg_y_is_more:
                 xba
@@ -355,9 +360,6 @@ atan_x_diff_abs: .res 2
                 clc
                 adc #$e0
                 rts
-
-    jsr atan_new_inner
-    rts
 .endproc
 
 ; in:
@@ -381,6 +383,9 @@ atan_x_diff_abs: .res 2
 	lda #0 ; 10
 	xba    ; 13
 	lda RDDIVL
+	bne :+
+	    dec a
+	:
 
 	; 2. get value from table
 	tax

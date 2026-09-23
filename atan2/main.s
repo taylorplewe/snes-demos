@@ -54,9 +54,9 @@ reset:
 	lda #INIDISP_BLANK
 	sta INIDISP
 
-	lda #5
-	xba
-	lda #1
+	wdm 0
+	ldx #.loword(-2)
+	ldy #.loword(26)
 	jsr atan_new
 
 	ldx #CIRCLE_START_X
