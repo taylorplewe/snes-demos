@@ -240,19 +240,100 @@ atan_offsets:
 .zeropage
 
 atan_x_diff_abs: .res 2
+atan_rot:        .res 1
+atan_y_diff_abs: .res 2
 
 
 .code
 
+; n v m x d i z c
+; n           z c
+
+; in:
+    ; X:16 - X2-X1 signed
+    ; Y:16 - Y2-Y1 signed
+; out:
+    ; A:8  - angle
 .a8
 .i16
 .proc atan_new_mini
-    ; 000
-    ; ││└ X delta negative
-    ; │└─ Y delta negative
-    ; └── abs(X delta) > abs(Y delta)
-    ; TODO: make this lookup table system
+    ; the complete rotation angle is calculated as follows:
+    ; 000 00000
+    ; │││ └┴┴┴┴ these come from the atan LUT (received from `atan_inner`)
+    ; ││└────── |dY| > |dX|
+    ; │└─────── X delta negative
+    ; └──────── Y delta negative
 
+    stz atan_rot
+
+    ; is dy negative?
+    a16
+    tya
+    php
+    bpl :+
+        neg
+        tay
+    :
+    a8
+    pla
+    asl a        ; shift N flag into the carry...
+    rol atan_rot ; ...and into the rightmost bit of atan_rot
+
+    ; is dx negative?
+    a16
+    txa
+    php
+    bpl :+
+        neg
+    :
+    sta atan_x_diff_abs
+    a8
+    pla
+    asl a        ; shift N flag into the carry...
+    lda atan_rot ; ...while getting the dy bit in the rightmost bit...
+    rol atan_rot ; ...carry -> rightmost bit of atan_rot...
+    eor atan_rot ; ...xor the dx bit with the dy bit
+    sta atan_rot
+
+    tya
+    cmp atan_x_diff_abs
+    php ; hang onto the carry
+    bcs dy_greater
+    ;dy_less:
+        xba
+        lda atan_x_diff_abs
+        xba
+        bra :+
+    dy_greater:
+        xba
+        lda atan_x_diff_abs
+    :
+    jsr atan_new_inner
+    tax
+    plp ; get that carry back
+
+    lda atan_rot
+    and #1       ; grab the xor'd dx bit
+    rol atan_rot ; rotate in (dy > dx) bit from carry
+    eor atan_rot ; xor that bit with the dx bit (itself already been xor'd with the dy bit)
+
+    ; now get those three bits in the leftmost positions
+    lsr a
+    ror a
+    ror a
+    ror a
+    sta atan_rot
+
+    ; do (32 - val from atan_inner) if needs be
+    bit #%00100000
+    beq :+
+        txa
+        rsb #$20
+        ora atan_rot
+        rts
+    :
+    txa
+    ora atan_rot
     rts
 .endproc
 
