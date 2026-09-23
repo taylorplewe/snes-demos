@@ -54,10 +54,10 @@ reset:
 	lda #INIDISP_BLANK
 	sta INIDISP
 
-	; ldx #.loword(40)
-	; ldy #.loword(-4)
-	; jsr atan_new
-	; wdm 0
+	ldx #.loword(89)
+	ldy #.loword(-4)
+	jsr atan_new_mini
+	wdm 0
 
 	ldx #CIRCLE_START_X
 	stx circle_x

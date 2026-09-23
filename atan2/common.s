@@ -422,8 +422,7 @@ atan_y_diff_abs: .res 2
                 xba
                 lda atan_x_diff_abs
                 xba
-                jsr atan_new_inner
-                rts
+                jmp atan_new_inner
         .a16
         @ydelta_neg:
             ; flip it
