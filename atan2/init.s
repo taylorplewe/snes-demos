@@ -34,15 +34,15 @@ init_ppu:
 		lda #0 ; $0000
 		sta BG12NBA
 		sta BG34NBA
-	
+
 	; obj
-		lda #OBSEL_16x16_32x32
+		lda #OBSEL_8x8_32x32
 		sta OBSEL
 
 	; enable bg1 & objs
 	lda #TMSW_OBJ
 	sta TM
-	
+
 	; mode 1
 	; lda #BGMODE_MODE1 | BGMODE_BG3PRIOR
 	; sta BGMODE

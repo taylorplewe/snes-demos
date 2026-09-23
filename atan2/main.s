@@ -21,7 +21,7 @@ circle_yspeed:	.res 2
 circle2_x:		.res 2
 circle2_y:		.res 2
 
-CIRCLE_SIZE = 32
+CIRCLE_SIZE = 8
 CIRCLE_START_X = (256/2)<<8
 CIRCLE_START_Y = (224/2)<<8
 CIRCLE2_START_X = 196<<8
@@ -54,10 +54,10 @@ reset:
 	lda #INIDISP_BLANK
 	sta INIDISP
 
-	wdm 0
-	ldx #.loword(-2)
-	ldy #.loword(26)
-	jsr atan_new
+	; ldx #.loword(40)
+	; ldy #.loword(-4)
+	; jsr atan_new
+	; wdm 0
 
 	ldx #CIRCLE_START_X
 	stx circle_x
@@ -83,18 +83,22 @@ forever:
 	jsr set_joy1_pressed
 
 	jsr move_circle2
-	jsr move_circle
+	jsr calc_circle_speed_vals
 
 	; update circle pos
 	a16
-	lda circle_x
-	clc
-	adc circle_xspeed
-	sta circle_x
-	lda circle_y
-	clc
-	adc circle_yspeed
-	sta circle_y
+	lda JOY1L
+	bit #JOY_B
+	bne :+
+    	lda circle_x
+    	clc
+    	adc circle_xspeed
+    	sta circle_x
+    	lda circle_y
+    	clc
+    	adc circle_yspeed
+    	sta circle_y
+	:
 	a8
 
 	; draw circle
@@ -111,7 +115,7 @@ forever:
 	sta OAM_INFO
 		; hi bits
 		ldx #0
-		lda #SPR_HI_LARGE
+		lda #0
 		jsr set_oam_hi_bits
 
 	; draw circle 2
@@ -128,7 +132,7 @@ forever:
 	sta OAM_INFO+4
 		; hi bits
 		ldx #4
-		lda #SPR_HI_LARGE
+		lda #0
 		jsr set_oam_hi_bits
 
 
@@ -154,6 +158,44 @@ nmi:
 	plx
 	pla
 	rti
+
+.a8
+.i16
+calc_circles_atan_new:
+    ;do_x:
+    lda circle2_x+1
+    sec
+    sbc circle_x+1
+    bcs circle2_x_greater
+    circle2_x_less:
+        xba
+        lda #$ff
+        xba
+        tax
+        bra do_y
+    circle2_x_greater:
+        xba
+        lda #0
+        xba
+        tax
+
+    do_y:
+    lda circle2_y+1
+    sec
+    sbc circle_y+1
+    bcs circle2_y_greater
+    ;circle2_y_less:
+        xba
+        lda #$ff
+        xba
+        tay
+        jmp atan_new
+    circle2_y_greater:
+        xba
+        lda #0
+        xba
+        tay
+        jmp atan_new
 
 calc_circles_atan2:
 	; figure out which quadrant
@@ -208,9 +250,16 @@ calc_circles_atan2:
 	jmp atan2
 	; rts
 
-move_circle:
+calc_circle_speed_vals:
+    a16
+    lda JOY1L
+    bit #JOY_A
+    a8
+    bne end
 	; arctan action
-	jsr calc_circles_atan2
+	wdm 0
+	jsr calc_circles_atan_new
+	; jsr calc_circles_atan2
 	pha
 	sta $f0
 	jsr sin
@@ -236,7 +285,7 @@ move_circle:
 	asr16
 	sta circle_xspeed
 	a8
-	rts
+	end: rts
 
 move_circle2:
 	a16

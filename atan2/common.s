@@ -272,7 +272,6 @@ atan_x_diff_abs: .res 2
                 xba
                 lda atan_x_diff_abs
                 jsr atan_new_inner
-                rsb #$20
                 clc
                 adc #$40
                 rts
@@ -281,9 +280,11 @@ atan_x_diff_abs: .res 2
                 lda atan_x_diff_abs
                 xba
                 jsr atan_new_inner
+                rsb #$20
                 clc
                 adc #$60
                 rts
+        .a16
         @ydelta_neg:
             ; flip it
             neg
@@ -335,6 +336,7 @@ atan_x_diff_abs: .res 2
                 xba
                 jsr atan_new_inner
                 rts
+        .a16
         @ydelta_neg:
             ; flip it
             neg
@@ -348,7 +350,6 @@ atan_x_diff_abs: .res 2
                 xba
                 lda atan_x_diff_abs
                 jsr atan_new_inner
-                rsb #$20
                 clc
                 adc #$c0
                 rts
@@ -357,6 +358,7 @@ atan_x_diff_abs: .res 2
                 lda atan_x_diff_abs
                 xba
                 jsr atan_new_inner
+                rsb #$20
                 clc
                 adc #$e0
                 rts
@@ -383,12 +385,13 @@ atan_x_diff_abs: .res 2
 	lda #0 ; 10
 	xba    ; 13
 	lda RDDIVL
-	bne :+
-	    dec a
-	:
+	tax
+	lda RDDIVH
+	beq under_one
+	    ldx #$ff
+	under_one:
 
 	; 2. get value from table
-	tax
 	lda atantab2, x
 
     rts
